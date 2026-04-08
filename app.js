@@ -146,9 +146,18 @@ function initPersistence() {
             const data = JSON.parse(saved);
             originalData = data.map(item => {
                 const normalized = { ...item };
-                normalized.isGrade10FromScale4 = Boolean(normalized.isGrade10FromScale4);
-                if (!isNaN(normalized.grade10)) {
-                    normalized.grade4 = calculateGrade4(normalized.grade10);
+                normalized.isGrade10FromScale4 = false;
+                normalized.isMocked = false;
+                normalized.isImproving = false;
+
+                // Always restore baseline scores on app reload to avoid persisting stale simulations
+                if (!isNaN(normalized.originalGrade10)) {
+                    normalized.grade10 = normalized.originalGrade10;
+                    normalized.grade4 = calculateGrade4(normalized.originalGrade10);
+                    normalized.gradeLetter = calculateGradeLetter(normalized.originalGrade10);
+                } else {
+                    normalized.grade10 = NaN;
+                    normalized.grade4 = NaN;
                 }
                 return normalized;
             });
