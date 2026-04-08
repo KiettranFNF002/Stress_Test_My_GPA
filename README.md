@@ -39,18 +39,34 @@ Tự động nhận diện và loại bỏ các môn Ngoại lệ, môn đạt (
 
 ---
 
-## 🛠️ Hướng dẫn "lên sóng" cực nhanh
+## 📝 Hướng dẫn sử dụng cho người mới (Non-tech)
 
-### 1. Sử dụng Offline
-- Tải toàn bộ source code về.
-- Mở file `index.html` bằng trình duyệt (Chrome, Edge, Brave...) là xong!
+Nếu bạn không phải dân lập trình, đừng lo! Hãy làm theo 3 bước cực đơn giản này:
 
-### 2. Sử dụng Online (GitHub Pages)
-Để mọi người có thể truy cập qua link web:
-1. Đưa code lên Repo của bạn.
-2. Vào **Settings** -> **Pages**.
-3. Chọn branch `main`, thư mục `/ (root)`.
-4. Nhấn **Save**. Link web của bạn sẽ xuất hiện sau 1-2 phút!
+### Bước 1: Tải công cụ về máy
+1. Nhìn lên phía trên trang này, tìm nút màu xanh có chữ **[<> Code]**.
+2. Click vào đó và chọn dòng cuối cùng: **Download ZIP**.
+3. Sau khi tải về, hãy **Giải nén** tệp tin đó ra một thư mục trên máy tính của bạn.
+
+### Bước 2: Chuẩn bị bảng điểm (Dành riêng cho sinh viên UEH)
+Mặc dù công cụ hỗ trợ nhiều trường, nhưng nó được **tối ưu hóa hoàn hảo cho UEHer**:
+1. Truy cập vào **Cổng thông tin sinh viên UEH** (student.ueh.edu.vn).
+2. Vào mục: **Tra cứu thông tin** -> **Kết quả học tập**.
+3. Chọn tất cả các năm học và nhấn nút **Xuất Excel**. Đây chính là file chúng ta cần!
+   * *Lưu ý: Các bạn trường khác chỉ cần chuẩn bị file Excel có cột 'Mã học phần', 'Tên học phần', 'Số TC', 'Điểm' là có thể dùng được.*
+
+### Bước 3: Khởi chạy
+1. Tìm file có tên là `index.html` trong thư mục bạn vừa giải nén.
+2. **Click đúp** để mở nó bằng trình duyệt (Chrome, Edge...) là bạn đã có ngay Dashboard để sử dụng!
+
+---
+
+## 🌐 Triển khai Online (GitHub Pages)
+
+Nếu bạn là chủ Repo và muốn tạo link web chính thức:
+1. Vào **Settings** -> **Pages**.
+2. Chọn branch `main`, thư mục `/ (root)`.
+3. Nhấn **Save**. Link web của bạn sẽ xuất hiện sau 1-2 phút!
 
 ---
 
