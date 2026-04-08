@@ -44,6 +44,18 @@ Bạn không cần biết lập trình hay cài đặt phức tạp, chỉ cần
 - **SheetJS**: Xử lý dữ liệu Excel client-side.
 - **Chart.js**: Trực quan hóa xu hướng điểm số.
 - **Lucide Icons**: Hệ thống biểu tượng hiện đại.
+- **html2canvas**: Xuất báo cáo dưới dạng hình ảnh.
+
+---
+
+### 🌐 Triển khai Online (GitHub Pages)
+Ứng dụng hoàn toàn tương thích với GitHub Pages. Để đưa Dashboard lên mạng:
+1. Truy cập Repository này trên GitHub.
+2. Vào **Settings** &rarr; **Pages**.
+3. Tại phần **Branch**, chọn `main` và thư mục `/ (root)`, sau đó nhấn **Save**.
+4. Chờ 1-2 phút, Dashboard của bạn sẽ sẵn sàng tại link web chính thức.
+
+---
 
 ---
 

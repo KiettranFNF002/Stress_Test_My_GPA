@@ -76,6 +76,9 @@ document.addEventListener('DOMContentLoaded', () => {
         bulkSetGrades(parseFloat(bulkGradeInput.value));
     });
 
+    initExport();
+    initTargetCalculator();
+
     resetBtn.addEventListener('click', () => {
         if (confirm('Bạn có chắc chắn muốn xóa tất cả dữ liệu? Thao tác này sẽ xóa cả dữ liệu đã lưu.')) {
             localStorage.removeItem('gpa_data');
@@ -234,6 +237,11 @@ function updateDashboard() {
     totalCreditsEl.textContent = state.totalCredits;
     pendingSubjectsEl.textContent = state.pendingCount;
     document.getElementById('academicRank').textContent = state.academicRank;
+
+    // Update dynamic labels
+    const isScale4 = state.config.simMode === 'scale4';
+    document.getElementById('targetGpaLabel').textContent = `Máy tính GPA Mục tiêu (${isScale4 ? '4' : '10'})`;
+    document.getElementById('recentGradeHeader').textContent = `Điểm (${isScale4 ? '4' : '10'})`;
 }
 
 function calculateStats() {
@@ -331,8 +339,10 @@ function renderRecentTable() {
         recentTableBody.innerHTML = '<tr><td colspan="4" class="empty-state">Chưa có thay đổi nào.</td></tr>';
         return;
     }
+    const isScale4 = state.config.simMode === 'scale4';
     recent.forEach(item => {
-        recentTableBody.innerHTML += `<tr><td>${item.id}</td><td>${item.name}</td><td>${item.grade10.toFixed(1)}</td><td><span class="save-status">Đã sửa</span></td></tr>`;
+        const gradeDisplay = isScale4 ? (item.grade4 ? item.grade4.toFixed(2) : '--') : item.grade10.toFixed(1);
+        recentTableBody.innerHTML += `<tr><td>${item.id}</td><td>${item.name}</td><td>${gradeDisplay}</td><td><span class="save-status">Đã sửa</span></td></tr>`;
     });
 }
 
@@ -523,14 +533,24 @@ function initChart() {
 
 function updateChart() {
     if (!chart) return;
-    let cw = 0, cc = 0; const gpaTrend = [], labels = [];
+    const isScale4 = state.config.simMode === 'scale4';
+    let cw = 0, cc = 0; 
+    const gpaTrend = [], labels = [];
+
     originalData.forEach((item, i) => {
         if (!isNaN(item.grade10)) {
-            cw += item.grade10 * item.credits; cc += item.credits;
-            gpaTrend.push((cw / cc).toFixed(2)); labels.push(item.id);
+            const grade = isScale4 ? (item.grade4 || 0) : item.grade10;
+            cw += grade * item.credits; 
+            cc += item.credits;
+            gpaTrend.push((cw / cc).toFixed(2)); 
+            labels.push(item.id);
         }
     });
-    chart.data.labels = labels; chart.data.datasets[0].data = gpaTrend; chart.update();
+
+    chart.data.labels = labels; 
+    chart.data.datasets[0].data = gpaTrend; 
+    chart.data.datasets[0].label = `GPA Tích Lũy (Hệ ${isScale4 ? '4' : '10'})`;
+    chart.update();
 }
 
 function initHelp() {
@@ -554,4 +574,118 @@ function initHelp() {
             helpModal.classList.add('hidden');
         }
     });
+}
+function initExport() {
+    const exportBtn = document.getElementById('exportBtn');
+    if (!exportBtn) return;
+
+    exportBtn.addEventListener('click', async () => {
+        const dashboard = document.querySelector('.dashboard-container');
+        const originalBtnText = exportBtn.innerHTML;
+        
+        try {
+            exportBtn.disabled = true;
+            exportBtn.innerHTML = '<i data-lucide="loader"></i> Đang xử lý...';
+            lucide.createIcons();
+
+            // Small delay to ensure icons are ready
+            await new Promise(r => setTimeout(r, 500));
+
+            const canvas = await html2canvas(dashboard, {
+                backgroundColor: '#020617',
+                scale: 2, // Higher quality
+                logging: false,
+                useCORS: true,
+                ignoreElements: (el) => el.classList.contains('btn-help') || el.id === 'helpModal'
+            });
+
+            const link = document.createElement('a');
+            link.download = `GPA_Report_${new Date().toISOString().slice(0,10)}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        } catch (err) {
+            console.error('Lỗi khi xuất ảnh:', err);
+            alert('Có lỗi xảy ra khi xuất báo cáo. Vui lòng thử lại.');
+        } finally {
+            exportBtn.disabled = false;
+            exportBtn.innerHTML = originalBtnText;
+            lucide.createIcons();
+        }
+    });
+}
+
+function initTargetCalculator() {
+    const targetGpaInput = document.getElementById('targetGpaInput');
+    const calcTargetBtn = document.getElementById('calcTargetBtn');
+    const targetResult = document.getElementById('targetResult');
+    const targetResultValue = document.getElementById('targetResultValue');
+    const applyTargetBtn = document.getElementById('applyTargetBtn');
+
+    if (!calcTargetBtn) return;
+
+    calcTargetBtn.addEventListener('click', () => {
+        const isScale4 = state.config.simMode === 'scale4';
+        const targetGpa = parseFloat(targetGpaInput.value);
+        const maxVal = isScale4 ? 4 : 10;
+
+        if (isNaN(targetGpa) || targetGpa < 0 || targetGpa > maxVal) {
+            alert(`Vui lòng nhập GPA mục tiêu hợp lệ (0-${maxVal}).`);
+            return;
+        }
+
+        const result = calculateInverseGPA(targetGpa);
+        if (result === null) {
+            alert('Không tìm thấy môn học nào để dự phóng trong danh sách.');
+            return;
+        }
+
+        targetResultValue.textContent = result.toFixed(2);
+        targetResult.classList.remove('hidden');
+        
+        // Always store as grade 10 for apply function
+        if (isScale4) {
+             // If we calculated in scale 4, we need the grade 10 equivalent to apply
+             const found = [...state.config.mapping].sort((a,b) => b.val4 - a.val4).find(m => result >= m.val4);
+             targetResult.dataset.lastCalc = found ? found.min : (result * 2.5);
+        } else {
+             targetResult.dataset.lastCalc = result;
+        }
+    });
+
+    applyTargetBtn.addEventListener('click', () => {
+        const val = parseFloat(targetResult.dataset.lastCalc);
+        if (!isNaN(val)) {
+            bulkSetGrades(val);
+            alert(`Đã áp dụng các môn dự phóng để hướng tới mục tiêu!`);
+        }
+    });
+}
+
+function calculateInverseGPA(targetGpa) {
+    const isScale4 = state.config.simMode === 'scale4';
+    let currentTotalWP = 0;
+    let currentTotalCredits = 0;
+    let pendingCredits = 0;
+
+    originalData.forEach(item => {
+        if (item.isException || item.isSpecialMorP) return;
+
+        const isPendingOrImproving = isNaN(item.originalGrade10) || item.isImproving;
+
+        if (isPendingOrImproving) {
+            pendingCredits += item.credits;
+        } else {
+            const grade = isScale4 ? item.grade4 : item.originalGrade10;
+            currentTotalWP += grade * item.credits;
+            currentTotalCredits += item.credits;
+        }
+    });
+
+    if (pendingCredits === 0) return null;
+
+    const requiredWP = (targetGpa * (currentTotalCredits + pendingCredits)) - currentTotalWP;
+    const avgRequired = requiredWP / pendingCredits;
+
+    const maxVal = isScale4 ? 4 : 10;
+    return Math.max(0, Math.min(maxVal, avgRequired));
 }

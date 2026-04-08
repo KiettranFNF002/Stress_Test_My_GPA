@@ -13,6 +13,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- html2canvas for Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
     <div class="dashboard-container">
@@ -66,6 +68,9 @@
                     <p>Hệ thống hỗ trợ Stress Test và Mô phỏng GPA</p>
                 </div>
                 <div class="header-actions">
+                    <button class="btn btn-secondary" id="exportBtn">
+                        <i data-lucide="download"></i> Xuất ảnh báo cáo
+                    </button>
                     <button class="btn btn-primary" id="resetBtn">
                         <i data-lucide="refresh-cw"></i> Reset Toàn bộ
                     </button>
@@ -119,6 +124,23 @@
                         <i data-lucide="trending-up"></i>
                     </div>
                 </div>
+
+                <div class="kpi-card target-calculator">
+                    <div class="kpi-info">
+                        <div class="target-header">
+                            <span class="label" id="targetGpaLabel">Máy tính GPA Mục tiêu</span>
+                            <i data-lucide="target" class="small-icon"></i>
+                        </div>
+                        <div class="target-input-group">
+                            <input type="number" id="targetGpaInput" min="0" max="10" step="0.01" placeholder="Ví dụ: 8.5">
+                            <button class="btn btn-sm btn-accent" id="calcTargetBtn">Tính toán</button>
+                        </div>
+                        <div id="targetResult" class="target-result hidden">
+                            Cần đạt: <strong id="targetResultValue">0.0</strong> /môn dự phóng
+                            <button class="btn-text" id="applyTargetBtn">Tự động áp dụng</button>
+                        </div>
+                    </div>
+                </div>
             </section>
 
             <!-- Navigation Tabs Content -->
@@ -137,7 +159,7 @@
                                     <tr>
                                         <th>Mã HP</th>
                                         <th>Tên Học Phần</th>
-                                        <th>Điểm (10)</th>
+                                        <th id="recentGradeHeader">Điểm</th>
                                         <th>Trạng thái</th>
                                     </tr>
                                 </thead>
