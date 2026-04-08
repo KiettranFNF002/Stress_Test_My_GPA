@@ -81,7 +81,7 @@
             <section class="kpi-grid">
                 <div class="kpi-card">
                     <div class="kpi-info">
-                        <span class="label">GPA Hiện Tại (Hệ 10)</span>
+                        <span class="label" id="gpa10Label">GPA Hiện Tại (Hệ 10)</span>
                         <h2 id="gpa10">0.00</h2>
                     </div>
                     <div class="kpi-icon positive">
@@ -306,7 +306,7 @@
                 </section>
                 
                 <section class="help-section">
-                    <h3>2. Cách Dự học môn mới</h3>
+                    <h3>3. Cách Dự học môn mới</h3>
                     <p>Để lập kế hoạch cho kỳ học sắp tới:</p>
                     <ul>
                         <li>Trong Excel, thêm hàng cho môn sắp học nhưng <strong>bỏ trống cột Điểm</strong>.</li>
@@ -315,7 +315,7 @@
                 </section>
 
                 <section class="help-section">
-                    <h3>3. Mô phỏng & Lập kịch bản điểm</h3>
+                    <h3>4. Mô phỏng & Lập kịch bản điểm</h3>
                     <p>Đây là linh hồn của bộ máy "Stress Test My GPA":</p>
                     <ul>
                         <li><strong>Kịch bản tích cực:</strong> Nhập điểm cao (9-10) để xem GPA có thể bứt phá đến mức nào.</li>
@@ -325,7 +325,25 @@
                 </section>
 
                 <section class="help-section">
-                    <h3>4. Các môn ngoại lệ</h3>
+                    <h3>5. Máy tính GPA mục tiêu (hệ 4) - phân bổ cân bằng</h3>
+                    <ul>
+                        <li>Khi nhập GPA mục tiêu hệ 4, hệ thống sẽ phân bổ điểm theo từng môn để đạt kết quả gần mục tiêu nhất.</li>
+                        <li>Bộ phân bổ ưu tiên phương án <strong>cân bằng</strong>, hạn chế các điểm quá thấp trong cùng một kịch bản.</li>
+                        <li>Nếu mục tiêu không khả thi trong ngưỡng cân bằng, hệ thống sẽ thông báo rõ và cho biết miền GPA khả thi.</li>
+                        <li>Nút <strong>Áp dụng phân bổ</strong> sẽ áp trực tiếp kịch bản vừa tính cho các môn trong tab Dự phóng.</li>
+                    </ul>
+                </section>
+
+                <section class="help-section">
+                    <h3>6. Ý nghĩa GPA hệ 10 khi mô phỏng hệ 4</h3>
+                    <ul>
+                        <li>Trong mode mô phỏng hệ 4, GPA hệ 10 có thể hiển thị dạng khoảng (ví dụ <code>8.10-8.45</code>).</li>
+                        <li>Khoảng này phản ánh bản chất quy đổi: cùng một mức hệ 4 có thể ứng với nhiều ngưỡng hệ 10 khác nhau.</li>
+                    </ul>
+                </section>
+
+                <section class="help-section">
+                    <h3>7. Các môn ngoại lệ</h3>
                     <p>Các môn sau <strong>không được tính vào GPA</strong>:</p>
                     <ul>
                         <li>Giáo dục thể chất (GDTC), Giáo dục quốc phòng (GDQP).</li>

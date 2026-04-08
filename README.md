@@ -1,66 +1,66 @@
-# 📊 STRESS TEST MY GPA - Dashboard Phân Tích & Dự Phóng GPA (UEH)
+# STRESS TEST MY GPA
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Technology](https://img.shields.io/badge/Technology-Pure%20JS%2FHTML%2FCSS-blue)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 
-### 🚀 Giới thiệu
-**STRESS TEST MY GPA** là công cụ web tĩnh mạnh mẽ dành riêng cho sinh viên UEH (và các trường đại học khác thông qua hệ thống cấu hình mở). Thay vì chỉ tính điểm trung bình như các công cụ thông thường, dự án này tập trung vào triết lý **"Stress Test"** — giúp người dùng lập kịch bản cho những tình huống tệ nhất để biết được sức chịu đựng của GPA hiện tại.
+Dashboard web tĩnh để phân tích bảng điểm, dự phóng GPA và lập kịch bản học tập cho sinh viên UEH (hoặc trường khác qua cấu hình mapping).
 
 ![Project Preview](screenshot.png)
 
----
+## Mục tiêu dự án
+- Nhập nhanh file Excel kết quả học tập.
+- Tự động loại trừ các học phần không tính GPA.
+- Mô phỏng kỳ học tiếp theo bằng các kịch bản điểm.
+- Tính ngược GPA mục tiêu và gợi ý phương án đạt gần nhất.
 
-### 🚀 Hướng dẫn sử dụng nhanh (Dành cho mọi người)
-Bạn không cần biết lập trình hay cài đặt phức tạp, chỉ cần thực hiện 3 bước:
-1. Nhấn vào nút xanh **[Code ▾]** ở phía trên bên phải trang này.
-2. Chọn **Download ZIP** và giải nén file vừa tải về máy.
-3. Tìm và nhấn đúp vào file **`index.html`** để bắt đầu sử dụng ngay trên trình duyệt của bạn (Chrome, Edge,...).
+## Hướng dẫn sử dụng
+1. Tải source về máy rồi mở trực tiếp file `index.html` bằng Chrome/Edge.
+2. Xuất file Excel từ UEH Student Portal:
+   - Tra cứu thông tin -> Kết quả học tập -> Xuất Excel.
+3. Kéo-thả file Excel vào dashboard.
+4. Vào tab `Tất cả học phần` để chọn môn cải thiện (nếu cần).
+5. Vào tab `Dự phóng` để nhập điểm mô phỏng theo hệ 10 hoặc hệ 4.
+6. Dùng `Máy tính GPA mục tiêu` để tạo phân bổ tự động.
 
----
+## Định dạng dữ liệu đầu vào
+File Excel nên có các cột:
+- `Mã học phần`
+- `Tên học phần`
+- `Số TC`
+- `Điểm` (hệ 10; có thể để trống cho môn dự học)
 
-### ✨ Tính năng nổi bật
-- **⚡ Tự động hóa hoàn toàn**: Chỉ cần tải lên file Excel kết quả học tập từ UEH Student Portal, hệ thống sẽ tự động dọn dẹp dữ liệu (loại bỏ GDTC, GDQP, các môn ngoại lệ).
-- **🛡️ Stress Test Philosophy**: Lập kịch bản điểm số kỳ tới (từ xuất sắc đến tệ nhất) để đo lường độ bền của GPA.
-- **🔮 Dự học môn tương lai**: Tự động nhận diện các môn học chưa có điểm trong file Excel để đưa vào bảng dự phóng.
-- **⚙️ Configurable Engine**: Hệ thống cấu hình mở cho phép tùy chỉnh mốc điểm hệ 10 -> 4 -> Chữ cho mọi trường đại học.
-- **🎨 Giao diện Premium**: Thiết kế Dark Mode kết hợp Glassmorphism mang lại trải nghiệm hiện đại, tối giản.
-- **🔒 Quyền riêng tư tuyệt đối**: Toàn bộ dữ liệu chỉ được lưu tại LocalStorage trên trình duyệt của bạn, không gửi lên bất kỳ máy chủ nào.
+## Ghi chú logic tính điểm
+- GPA tích lũy gốc đi theo điểm hệ 10 và quy đổi sang hệ 4 theo mapping cấu hình.
+- Các môn ngoại lệ (GDTC/GDQP/`(*)`) và điểm chữ đặc biệt (`M`, `P`, `I`, `X`) được xử lý riêng theo rule hệ thống.
+- Ở mode mô phỏng hệ 4, một mức hệ 4 có thể tương ứng nhiều ngưỡng hệ 10. Vì vậy KPI GPA hệ 10 có thể hiển thị dạng khoảng ước tính.
 
----
+## Cải tiến so với bản trước
+- Sửa thứ tự khởi tạo dữ liệu/cấu hình để tránh tính GPA sai ở lần load đầu.
+- Đồng bộ logic chart với logic GPA thực tế (loại đúng các học phần không tính GPA).
+- Chặn và xử lý ổn định nhóm môn `M/P` trong luồng dự phóng.
+- Sửa các lỗi hiển thị điểm `0` và lỗi tìm kiếm khi mã học phần không phải chuỗi.
+- Cải tiến máy tính GPA mục tiêu hệ 4:
+  - Quy đổi điểm theo các mức rời rạc trong mapping, không dùng giá trị lẻ không hợp lệ.
+  - Áp dụng phân bổ theo từng môn thay vì ép đồng loạt một mức.
+  - Tối ưu phân bổ theo hướng cân bằng hơn, giảm phương án cực đoan.
+  - Hiển thị GPA thực tế khả thi gần nhất và trạng thái khả thi.
+- Bảng `Học phần vừa cập nhật` phản ánh đầy đủ danh sách học phần thuộc diện dự phóng.
+- Bổ sung nhãn KPI để phân biệt GPA hệ 10 thực tế, quy đổi và ước tính.
 
-### 🛠️ Cách sử dụng
-1. **Xuất dữ liệu**: Truy cập UEH Student Portal -> Tra cứu thông tin -> Kết quả học tập -> Nhấn **[Xuất excel]** ở đầu trang.
-2. **Tải lên**: Kéo thả file vừa tải vào Dashboard.
-3. **Mô phỏng**: 
-   - Thêm các môn muốn học cải thiện từ danh sách.
-   - Nhập điểm dự tính tại Tab **Dự phóng**.
-   - Quan sát GPA thay đổi theo thời gian thực.
+## Công nghệ sử dụng
+- HTML5 / CSS3 (Vanilla)
+- Vanilla JavaScript (ES6+)
+- SheetJS (parse Excel client-side)
+- Chart.js (trực quan hóa xu hướng)
+- Lucide Icons
+- html2canvas (xuất ảnh báo cáo)
 
----
+## Triển khai GitHub Pages
+1. Vào `Settings` -> `Pages`.
+2. Chọn branch `main`, thư mục `/ (root)`.
+3. Lưu cấu hình và chờ GitHub build trang.
 
-### 💻 Công nghệ sử dụng
-- **HTML5 / CSS3** (Vanilla)
-- **Vanilla JavaScript** (ES6+)
-- **SheetJS**: Xử lý dữ liệu Excel client-side.
-- **Chart.js**: Trực quan hóa xu hướng điểm số.
-- **Lucide Icons**: Hệ thống biểu tượng hiện đại.
-- **html2canvas**: Xuất báo cáo dưới dạng hình ảnh.
+## Giấy phép
+MIT License.
 
----
-
-### 🌐 Triển khai Online (GitHub Pages)
-Ứng dụng hoàn toàn tương thích với GitHub Pages. Để đưa Dashboard lên mạng:
-1. Truy cập Repository này trên GitHub.
-2. Vào **Settings** &rarr; **Pages**.
-3. Tại phần **Branch**, chọn `main` và thư mục `/ (root)`, sau đó nhấn **Save**.
-4. Chờ 1-2 phút, Dashboard của bạn sẽ sẵn sàng tại link web chính thức.
-
----
-
----
-
-### 📄 Giấy phép
-Dự án được phát hành dưới giấy phép MIT. Tự do sử dụng và đóng góp!
-
----
-*Phát triển bởi [KiettranFNF002](https://github.com/KiettranFNF002)*
+Phát triển bởi [KiettranFNF002](https://github.com/KiettranFNF002)

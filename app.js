@@ -5,8 +5,11 @@ let chart = null;
 const state = {
     totalCredits: 0,
     currentGPA10: 0,
+    currentGPA10Min: 0,
+    currentGPA10Max: 0,
     currentGPA4: 0,
     pendingCount: 0,
+    hasGPA10Range: false,
     activeTab: 'overview',
     config: {
         simMode: 'scale10', // 'scale10' or 'scale4'
@@ -33,6 +36,8 @@ const state = {
     }
 };
 
+const TARGET_PLANNER_DEFAULT_MIN_SCALE4 = 2.0;
+
 // Elements
 const dropzone = document.getElementById('dropzone');
 const fileInput = document.getElementById('fileInput');
@@ -51,6 +56,7 @@ const tabContents = document.querySelectorAll('.tab-content');
 
 // KPI Elements
 const gpa10El = document.getElementById('gpa10');
+const gpa10LabelEl = document.getElementById('gpa10Label');
 const gpa4El = document.getElementById('gpa4');
 const totalCreditsEl = document.getElementById('totalCredits');
 const pendingSubjectsEl = document.getElementById('pendingSubjects');
@@ -125,26 +131,33 @@ function switchTab(tabName) {
 }
 
 function initPersistence() {
-    const saved = localStorage.getItem('gpa_data');
-    if (saved) {
-        try {
-            const data = JSON.parse(saved);
-            originalData = data;
-            displayData = [...originalData];
-            updateDashboard();
-            fileInfo.classList.remove('hidden');
-            fileNameSpan.textContent = "Dữ liệu đã lưu";
-        } catch (e) {
-            console.error("Lỗi khi load dữ liệu cũ", e);
-        }
-    }
-
     const savedConfig = localStorage.getItem('gpa_config');
     if (savedConfig) {
         try {
             state.config = JSON.parse(savedConfig);
         } catch (e) {
             console.error("Lỗi khi load cấu hình", e);
+        }
+    }
+
+    const saved = localStorage.getItem('gpa_data');
+    if (saved) {
+        try {
+            const data = JSON.parse(saved);
+            originalData = data.map(item => {
+                const normalized = { ...item };
+                normalized.isGrade10FromScale4 = Boolean(normalized.isGrade10FromScale4);
+                if (!isNaN(normalized.grade10)) {
+                    normalized.grade4 = calculateGrade4(normalized.grade10);
+                }
+                return normalized;
+            });
+            displayData = [...originalData];
+            updateDashboard();
+            fileInfo.classList.remove('hidden');
+            fileNameSpan.textContent = "Dữ liệu đã lưu";
+        } catch (e) {
+            console.error("Lỗi khi load dữ liệu cũ", e);
         }
     }
 }
@@ -212,10 +225,11 @@ function processExcelData(data) {
             name: name,
             credits: parseFloat(row['Số TC']) || 0,
             grade10: parseFloat(row['Điểm']),
-            grade4: parseFloat(row['Điểm hệ 4']),
+            grade4: !isNaN(parseFloat(row['Điểm'])) ? calculateGrade4(parseFloat(row['Điểm'])) : parseFloat(row['Điểm hệ 4']),
             gradeLetter: gradeLetter,
             isMocked: false,
             isImproving: false,
+            isGrade10FromScale4: false,
             originalGrade10: parseFloat(row['Điểm']),
             isException: isException,
             isSpecialIorX: isSpecialIorX,
@@ -232,7 +246,17 @@ function updateDashboard() {
     updateChart();
     saveToStorage();
     
-    gpa10El.textContent = state.currentGPA10.toFixed(2);
+    if (state.config.simMode === 'scale4' && state.hasGPA10Range) {
+        gpa10El.textContent = `${state.currentGPA10Min.toFixed(2)}-${state.currentGPA10Max.toFixed(2)}`;
+        if (gpa10LabelEl) gpa10LabelEl.textContent = 'GPA Hệ 10 (Ước tính)';
+    } else {
+        gpa10El.textContent = state.currentGPA10.toFixed(2);
+        if (gpa10LabelEl) {
+            gpa10LabelEl.textContent = state.config.simMode === 'scale4'
+                ? 'GPA Hệ 10 (Quy đổi)'
+                : 'GPA Hiện Tại (Hệ 10)';
+        }
+    }
     gpa4El.textContent = state.currentGPA4.toFixed(2);
     totalCreditsEl.textContent = state.totalCredits;
     pendingSubjectsEl.textContent = state.pendingCount;
@@ -247,10 +271,29 @@ function updateDashboard() {
     if (targetGpaInput) {
         targetGpaInput.placeholder = isScale4 ? "Ví dụ: 3.5" : "Ví dụ: 8.5";
     }
+
+    // Sync Bulk Grade Input in Simulation Tab
+    const bulkGradeInput = document.getElementById('bulkGradeInput');
+    if (bulkGradeInput) {
+        bulkGradeInput.max = isScale4 ? 4 : 10;
+        bulkGradeInput.step = isScale4 ? getScale4Step() : 0.5;
+        bulkGradeInput.placeholder = isScale4 ? "3.0" : "8.0";
+        // Clear value if it was set to the default by previous code
+        if (bulkGradeInput.value == "8.0" || bulkGradeInput.value == "3.0" || bulkGradeInput.value == "8" || bulkGradeInput.value == "3") {
+            bulkGradeInput.value = "";
+        }
+    }
 }
 
 function calculateStats() {
-    let totalWeighted10 = 0, totalWeighted4 = 0, creditsForAverage = 0, totalCreditsPassed = 0, pendingCount = 0;
+    let totalWeighted10 = 0;
+    let totalWeighted10Min = 0;
+    let totalWeighted10Max = 0;
+    let totalWeighted4 = 0;
+    let creditsForAverage = 0;
+    let totalCreditsPassed = 0;
+    let pendingCount = 0;
+    let hasGPA10Range = false;
     
     originalData.forEach(item => {
         // Exclude exceptions and M/P from GPA calculation avg
@@ -265,6 +308,20 @@ function calculateStats() {
 
         if (!isNaN(currentGrade)) {
             totalWeighted10 += currentGrade * item.credits;
+            if (state.config.simMode === 'scale4' && item.isGrade10FromScale4 && !isNaN(item.grade4)) {
+                const bounds = getGrade10BoundsFromGrade4(item.grade4);
+                if (bounds) {
+                    totalWeighted10Min += bounds.min * item.credits;
+                    totalWeighted10Max += bounds.max * item.credits;
+                    hasGPA10Range = true;
+                } else {
+                    totalWeighted10Min += currentGrade * item.credits;
+                    totalWeighted10Max += currentGrade * item.credits;
+                }
+            } else {
+                totalWeighted10Min += currentGrade * item.credits;
+                totalWeighted10Max += currentGrade * item.credits;
+            }
             totalWeighted4 += calculateGrade4(currentGrade) * item.credits;
             creditsForAverage += item.credits;
             if (calculateGrade4(currentGrade) >= 1.0) {
@@ -277,8 +334,11 @@ function calculateStats() {
 
     state.totalCredits = totalCreditsPassed;
     state.currentGPA10 = creditsForAverage > 0 ? totalWeighted10 / creditsForAverage : 0;
+    state.currentGPA10Min = creditsForAverage > 0 ? totalWeighted10Min / creditsForAverage : 0;
+    state.currentGPA10Max = creditsForAverage > 0 ? totalWeighted10Max / creditsForAverage : 0;
     state.currentGPA4 = creditsForAverage > 0 ? totalWeighted4 / creditsForAverage : 0;
     state.pendingCount = pendingCount;
+    state.hasGPA10Range = hasGPA10Range && state.currentGPA10Max - state.currentGPA10Min > 0.0001;
     state.academicRank = calculateAcademicRank(state.currentGPA4);
 }
 
@@ -300,6 +360,280 @@ function calculateGradeLetter(grade10) {
     return found ? found.letter : "F";
 }
 
+function getAllowedScale4Values() {
+    const levels = [...new Set(
+        state.config.mapping
+            .map(m => parseFloat(m.val4))
+            .filter(v => !isNaN(v))
+    )];
+    return levels.sort((a, b) => a - b);
+}
+
+function getNearestScale4Value(rawValue) {
+    const val = parseFloat(rawValue);
+    const levels = getAllowedScale4Values();
+    if (isNaN(val) || levels.length === 0) return NaN;
+
+    return levels.reduce((nearest, current) => {
+        return Math.abs(current - val) < Math.abs(nearest - val) ? current : nearest;
+    }, levels[0]);
+}
+
+function getScale4RuleFromInput(rawValue) {
+    const snappedVal4 = getNearestScale4Value(rawValue);
+    if (isNaN(snappedVal4)) return null;
+
+    const candidates = state.config.mapping
+        .filter(m => !isNaN(parseFloat(m.min)) && !isNaN(parseFloat(m.val4)) && parseFloat(m.val4) === snappedVal4)
+        .sort((a, b) => parseFloat(a.min) - parseFloat(b.min));
+
+    const rule = candidates[0];
+    if (!rule) return null;
+
+    return {
+        snappedVal4,
+        minGrade10: parseFloat(rule.min),
+        letter: rule.letter
+    };
+}
+
+function getScale4Step() {
+    const levels = getAllowedScale4Values();
+    if (levels.length < 2) return 0.1;
+
+    let minStep = Infinity;
+    for (let i = 1; i < levels.length; i++) {
+        const diff = levels[i] - levels[i - 1];
+        if (diff > 0 && diff < minStep) minStep = diff;
+    }
+
+    return Number.isFinite(minStep) ? minStep : 0.1;
+}
+
+function getGrade10BoundsFromGrade4(val4) {
+    const targetVal4 = parseFloat(val4);
+    if (isNaN(targetVal4)) return null;
+
+    const sorted = [...state.config.mapping]
+        .map(rule => ({ min: parseFloat(rule.min), val4: parseFloat(rule.val4) }))
+        .filter(rule => !isNaN(rule.min) && !isNaN(rule.val4))
+        .sort((a, b) => b.min - a.min);
+
+    if (sorted.length === 0) return null;
+
+    const intervals = [];
+    for (let i = 0; i < sorted.length; i++) {
+        const current = sorted[i];
+        const upper = i === 0 ? 10 : sorted[i - 1].min - 0.01;
+        const lower = current.min;
+        if (Math.abs(current.val4 - targetVal4) < 1e-9) {
+            intervals.push({
+                min: Math.max(0, lower),
+                max: Math.min(10, Math.max(lower, upper))
+            });
+        }
+    }
+
+    if (intervals.length === 0) return null;
+
+    return {
+        min: intervals.reduce((acc, it) => Math.min(acc, it.min), Infinity),
+        max: intervals.reduce((acc, it) => Math.max(acc, it.max), -Infinity)
+    };
+}
+
+function getScale4Rules(minScale4 = 0) {
+    const grouped = new Map();
+
+    state.config.mapping.forEach(rule => {
+        const minGrade10 = parseFloat(rule.min);
+        const val4 = parseFloat(rule.val4);
+        if (isNaN(minGrade10) || isNaN(val4)) return;
+        if (val4 < minScale4) return;
+
+        const existing = grouped.get(val4);
+        if (!existing || minGrade10 < existing.minGrade10) {
+            grouped.set(val4, {
+                snappedVal4: val4,
+                minGrade10: minGrade10,
+                letter: rule.letter
+            });
+        }
+    });
+
+    return [...grouped.values()].sort((a, b) => a.snappedVal4 - b.snappedVal4);
+}
+
+function getProjectionItems() {
+    return originalData.filter(item =>
+        !item.isException &&
+        !item.isSpecialMorP &&
+        (isNaN(item.originalGrade10) || item.isImproving)
+    );
+}
+
+function buildScale4TargetPlan(targetGpa, options = {}) {
+    const minScale4 = !isNaN(parseFloat(options.minScale4)) ? parseFloat(options.minScale4) : 0;
+    const projectionItems = getProjectionItems();
+    if (projectionItems.length === 0) return null;
+
+    const rules = getScale4Rules(minScale4);
+    if (rules.length === 0) return null;
+
+    let baseWeightedPoints = 0;
+    let totalCredits = 0;
+
+    originalData.forEach(item => {
+        if (item.isException || item.isSpecialMorP) return;
+
+        totalCredits += item.credits;
+        const isProjection = isNaN(item.originalGrade10) || item.isImproving;
+        if (isProjection) return;
+
+        const grade4 = !isNaN(item.grade4) ? item.grade4 : calculateGrade4(item.originalGrade10);
+        baseWeightedPoints += grade4 * item.credits;
+    });
+
+    if (totalCredits <= 0) return null;
+
+    const SCALE = 100;
+    const baseInt = Math.round(baseWeightedPoints * SCALE);
+    const targetInt = Math.round(targetGpa * totalCredits * SCALE);
+
+    let states = new Map();
+    states.set(0, 0); // projectedWeightedInt -> balancePenalty
+    const tracesByStep = [];
+    const MAX_STATES = 30000;
+
+    for (const item of projectionItems) {
+        const nextStates = new Map(); // projectedWeightedInt -> bestPenalty
+        const stepTrace = new Map();
+
+        for (const [sum, accPenalty] of states.entries()) {
+            for (const rule of rules) {
+                const weightedInt = Math.round(rule.snappedVal4 * item.credits * SCALE);
+                const nextSum = sum + weightedInt;
+                const diffFromTarget = rule.snappedVal4 - targetGpa;
+                const asymWeight = diffFromTarget < 0 ? 1.55 : 1.0;
+                const tailThreshold = targetGpa - 0.8;
+                const tailPenalty = rule.snappedVal4 < tailThreshold
+                    ? Math.pow(tailThreshold - rule.snappedVal4, 2) * item.credits * 8
+                    : 0;
+                const nextPenalty = accPenalty + (Math.pow(Math.abs(diffFromTarget), 2) * item.credits * asymWeight) + tailPenalty;
+
+                if (!nextStates.has(nextSum) || nextPenalty < nextStates.get(nextSum)) {
+                    nextStates.set(nextSum, nextPenalty);
+                    stepTrace.set(nextSum, { prevSum: sum, rule });
+                } else if (Math.abs(nextPenalty - nextStates.get(nextSum)) < 1e-9 && Math.random() < 0.25) {
+                    // keep some randomness among equivalent-quality solutions
+                    stepTrace.set(nextSum, { prevSum: sum, rule });
+                }
+            }
+        }
+
+        if (nextStates.size > MAX_STATES) {
+            const ranked = [...nextStates.entries()]
+                .map(([sum, penalty]) => ({
+                    sum,
+                    penalty,
+                    distance: Math.abs((baseInt + sum) - targetInt)
+                }))
+                .sort((a, b) => a.distance - b.distance || a.penalty - b.penalty)
+                .slice(0, MAX_STATES);
+
+            const prunedStates = new Map();
+            const prunedTrace = new Map();
+            ranked.forEach(({ sum, penalty }) => {
+                prunedStates.set(sum, penalty);
+                prunedTrace.set(sum, stepTrace.get(sum));
+            });
+
+            states = prunedStates;
+            tracesByStep.push(prunedTrace);
+        } else {
+            states = nextStates;
+            tracesByStep.push(stepTrace);
+        }
+    }
+
+    let bestProjectedInt = null;
+    let bestDistance = Infinity;
+    let bestPenalty = Infinity;
+
+    for (const [projectedInt, penalty] of states.entries()) {
+        const distance = Math.abs((baseInt + projectedInt) - targetInt);
+        if (
+            distance < bestDistance ||
+            (distance === bestDistance && penalty < bestPenalty) ||
+            (distance === bestDistance && Math.abs(penalty - bestPenalty) < 1e-9 && Math.random() < 0.35)
+        ) {
+            bestDistance = distance;
+            bestPenalty = penalty;
+            bestProjectedInt = projectedInt;
+        }
+    }
+
+    if (bestProjectedInt === null) return null;
+
+    const assignments = new Array(projectionItems.length);
+    let cursor = bestProjectedInt;
+
+    for (let step = projectionItems.length - 1; step >= 0; step--) {
+        const trace = tracesByStep[step].get(cursor);
+        if (!trace) return null;
+        assignments[step] = {
+            item: projectionItems[step],
+            rule: trace.rule
+        };
+        cursor = trace.prevSum;
+    }
+
+    const achievedGpa = (baseInt + bestProjectedInt) / SCALE / totalCredits;
+
+    let minProjected = 0;
+    let maxProjected = 0;
+    projectionItems.forEach(item => {
+        minProjected += rules[0].snappedVal4 * item.credits;
+        maxProjected += rules[rules.length - 1].snappedVal4 * item.credits;
+    });
+
+    const minAchievable = (baseWeightedPoints + minProjected) / totalCredits;
+    const maxAchievable = (baseWeightedPoints + maxProjected) / totalCredits;
+
+    const mixMap = new Map();
+    assignments.forEach(({ rule }) => {
+        const key = rule.snappedVal4.toFixed(2);
+        mixMap.set(key, (mixMap.get(key) || 0) + 1);
+    });
+    const mixSummary = [...mixMap.entries()]
+        .sort((a, b) => parseFloat(b[0]) - parseFloat(a[0]))
+        .map(([val4, count]) => `${count} môn ${parseFloat(val4).toFixed(1)}`)
+        .join(', ');
+
+    return {
+        assignments,
+        achievedGpa,
+        minAchievable,
+        maxAchievable,
+        mixSummary,
+        minScale4
+    };
+}
+
+function applyScale4TargetPlan(plan) {
+    if (!plan || !Array.isArray(plan.assignments)) return;
+
+    plan.assignments.forEach(({ item, rule }) => {
+        item.grade4 = rule.snappedVal4;
+        item.grade10 = rule.minGrade10;
+        item.gradeLetter = rule.letter;
+        item.isGrade10FromScale4 = true;
+        item.isMocked = true;
+    });
+
+    updateDashboard();
+}
+
 function renderAllTables() {
     renderSubjectTable();
     renderRecentTable();
@@ -316,7 +650,7 @@ function renderSubjectTable() {
     displayData.forEach((item) => {
         // Use the index in originalData for stable event handling
         const originalIndex = originalData.indexOf(item);
-        const isPending = isNaN(item.grade10);
+        const isPending = isNaN(item.grade10) || item.grade10 === null;
         const displayGrade = isPending ? 'Trống' : item.grade10.toFixed(1);
         const row = document.createElement('tr');
         if (item.isImproving) row.classList.add('improved-row');
@@ -327,7 +661,7 @@ function renderSubjectTable() {
             <td>${item.name} ${item.isException ? '<span class="badge-exception">Ngoại lệ</span>' : ''}</td>
             <td>${item.credits}</td>
             <td>${item.isException ? displayGrade : `<span class="editable ${isPending ? 'pending' : ''}" contenteditable="true" onblur="updateGrade(${originalIndex}, this.innerText)">${displayGrade}</span>`}</td>
-            <td>${item.grade4 ? item.grade4.toFixed(2) : '--'}</td>
+            <td>${(item.grade4 !== null && !isNaN(item.grade4)) ? item.grade4.toFixed(2) : '--'}</td>
             <td>${item.gradeLetter || '--'}</td>
             <td>${canImprove ? `<button class="btn-mock ${item.isImproving ? 'active' : ''}" onclick="toggleImprovement(${originalIndex})">
                 ${item.isImproving ? 'Hủy' : 'Thêm'}
@@ -339,21 +673,30 @@ function renderSubjectTable() {
 
 function renderRecentTable() {
     recentTableBody.innerHTML = '';
-    const recent = originalData.filter(i => i.isMocked || i.isImproving).slice(-5);
-    if (recent.length === 0) {
-        recentTableBody.innerHTML = '<tr><td colspan="4" class="empty-state">Chưa có thay đổi nào.</td></tr>';
+    const projectedItems = originalData.filter(i =>
+        (isNaN(i.originalGrade10) || i.isImproving) &&
+        !i.isException &&
+        !i.isSpecialMorP
+    );
+
+    if (projectedItems.length === 0) {
+        recentTableBody.innerHTML = '<tr><td colspan="4" class="empty-state">Chưa có học phần nào trong diện dự phóng.</td></tr>';
         return;
     }
+
     const isScale4 = state.config.simMode === 'scale4';
-    recent.forEach(item => {
-        const gradeDisplay = isScale4 ? (item.grade4 ? item.grade4.toFixed(2) : '--') : item.grade10.toFixed(1);
-        recentTableBody.innerHTML += `<tr><td>${item.id}</td><td>${item.name}</td><td>${gradeDisplay}</td><td><span class="save-status">Đã sửa</span></td></tr>`;
+    projectedItems.forEach(item => {
+        const gradeDisplay = isScale4
+            ? ((item.grade4 !== null && !isNaN(item.grade4)) ? item.grade4.toFixed(2) : '--')
+            : (isNaN(item.grade10) ? '--' : item.grade10.toFixed(1));
+        const statusLabel = item.isMocked ? 'Đã dự phóng' : 'Chờ nhập';
+        recentTableBody.innerHTML += `<tr><td>${item.id}</td><td>${item.name}</td><td>${gradeDisplay}</td><td><span class="save-status">${statusLabel}</span></td></tr>`;
     });
 }
 
 function renderSimulationTable() {
     simulationTableBody.innerHTML = '';
-    const sims = originalData.filter(i => (isNaN(i.originalGrade10) || i.isImproving) && !i.isException);
+    const sims = originalData.filter(i => (isNaN(i.originalGrade10) || i.isImproving) && !i.isException && !i.isSpecialMorP);
     
     if (sims.length === 0) {
         simulationTableBody.innerHTML = '<tr><td colspan="6" class="empty-state">Không có môn học nào cần dự phóng.</td></tr>';
@@ -366,7 +709,7 @@ function renderSimulationTable() {
         const originalIndex = originalData.indexOf(item);
         let displayValue = '';
         if (isScale4) {
-            displayValue = item.grade4 ? item.grade4.toFixed(2) : '0.00';
+            displayValue = !isNaN(item.grade4) ? item.grade4.toFixed(2) : '0.00';
         } else {
             displayValue = isNaN(item.grade10) ? '0' : item.grade10.toFixed(1);
         }
@@ -388,7 +731,7 @@ function renderSimulationTable() {
                 <td>
                     <div class="bulk-input-group">
                         <input type="number" 
-                               step="${isScale4 ? '0.1' : '0.5'}" 
+                               step="${isScale4 ? getScale4Step() : '0.5'}" 
                                min="0" 
                                max="${isScale4 ? '4.0' : '10'}" 
                                value="${displayValue}" 
@@ -411,6 +754,7 @@ function resetGrade(index) {
     item.grade10 = item.originalGrade10;
     item.grade4 = calculateGrade4(item.grade10);
     item.gradeLetter = calculateGradeLetter(item.grade10);
+    item.isGrade10FromScale4 = false;
     item.isMocked = false;
     updateDashboard();
 }
@@ -419,16 +763,21 @@ function updateSimulationGrade(index, value) {
     const val = parseFloat(value);
     const item = originalData[index];
     if (state.config.simMode === 'scale4') {
-        item.grade4 = val;
-        // Approximation back to scale 10 for chart consistency, 
-        // find best matching min from config
-        const found = [...state.config.mapping].sort((a,b) => b.val4 - a.val4).find(m => val >= m.val4);
-        item.grade10 = found ? found.min : (val * 2.5); // Fallback
-        item.gradeLetter = found ? found.letter : 'F';
+        const mapped = getScale4RuleFromInput(val);
+        if (!mapped) {
+            renderAllTables();
+            return;
+        }
+
+        item.grade4 = mapped.snappedVal4;
+        item.grade10 = mapped.minGrade10;
+        item.gradeLetter = mapped.letter;
+        item.isGrade10FromScale4 = true;
     } else {
         item.grade10 = val;
         item.grade4 = calculateGrade4(val);
         item.gradeLetter = calculateGradeLetter(val);
+        item.isGrade10FromScale4 = false;
     }
     item.isMocked = true;
     updateDashboard();
@@ -486,6 +835,7 @@ function updateGrade(index, newGrade) {
         item.grade10 = val;
         item.grade4 = calculateGrade4(val);
         item.gradeLetter = calculateGradeLetter(val);
+        item.isGrade10FromScale4 = false;
         item.isMocked = true;
         updateDashboard();
     } else { renderAllTables(); }
@@ -493,7 +843,7 @@ function updateGrade(index, newGrade) {
 
 function toggleImprovement(index) {
     const item = originalData[index];
-    if (item.isException || isNaN(item.originalGrade10)) return;
+    if (item.isException || item.isSpecialMorP || isNaN(item.originalGrade10)) return;
     
     item.isImproving = !item.isImproving;
     
@@ -502,6 +852,7 @@ function toggleImprovement(index) {
         item.grade10 = item.originalGrade10;
         item.grade4 = calculateGrade4(item.grade10);
         item.gradeLetter = calculateGradeLetter(item.grade10);
+        item.isGrade10FromScale4 = false;
         item.isMocked = false;
     }
     // When selecting, we just add it to Projection tab without changing current grades
@@ -510,20 +861,37 @@ function toggleImprovement(index) {
 }
 
 function bulkSetGrades(grade) {
-    if (isNaN(grade) || grade < 0 || grade > 10) return;
+    const isScale4 = state.config.simMode === 'scale4';
+    const maxVal = isScale4 ? 4 : 10;
+    
+    if (isNaN(grade) || grade < 0 || grade > maxVal) return;
+    const mappedScale4 = isScale4 ? getScale4RuleFromInput(grade) : null;
+    if (isScale4 && !mappedScale4) return;
+
     originalData.forEach(item => {
-        if (!item.isException && (isNaN(item.originalGrade10) || item.isImproving)) {
-            item.grade10 = grade;
+        if (!item.isException && !item.isSpecialMorP && (isNaN(item.originalGrade10) || item.isImproving)) {
+            if (isScale4) {
+                item.grade4 = mappedScale4.snappedVal4;
+                item.grade10 = mappedScale4.minGrade10;
+                item.gradeLetter = mappedScale4.letter;
+                item.isGrade10FromScale4 = true;
+            } else {
+                item.grade10 = grade;
+                item.grade4 = calculateGrade4(grade);
+                item.gradeLetter = calculateGradeLetter(grade);
+                item.isGrade10FromScale4 = false;
+            }
             item.isMocked = true;
-            item.grade4 = calculateGrade4(grade);
-            item.gradeLetter = calculateGradeLetter(grade);
         }
     });
     updateDashboard();
 }
 
 function filterAndRenderTable(query) {
-    displayData = originalData.filter(item => item.name.toLowerCase().includes(query.toLowerCase()) || item.id.toLowerCase().includes(query.toLowerCase()));
+    displayData = originalData.filter(item => 
+        String(item.name).toLowerCase().includes(query.toLowerCase()) || 
+        String(item.id).toLowerCase().includes(query.toLowerCase())
+    );
     renderSubjectTable();
 }
 
@@ -543,8 +911,10 @@ function updateChart() {
     const gpaTrend = [], labels = [];
 
     originalData.forEach((item, i) => {
-        if (!isNaN(item.grade10)) {
-            const grade = isScale4 ? (item.grade4 || 0) : item.grade10;
+        if (!isNaN(item.grade10) && !item.isException && !item.isSpecialMorP) {
+            const grade = isScale4
+                ? (!isNaN(item.grade4) ? item.grade4 : calculateGrade4(item.grade10))
+                : item.grade10;
             cw += grade * item.credits; 
             cc += item.credits;
             gpaTrend.push((cw / cc).toFixed(2)); 
@@ -624,9 +994,8 @@ function initTargetCalculator() {
     const calcTargetBtn = document.getElementById('calcTargetBtn');
     const targetResult = document.getElementById('targetResult');
     const targetResultValue = document.getElementById('targetResultValue');
-    const applyTargetBtn = document.getElementById('applyTargetBtn');
 
-    if (!calcTargetBtn) return;
+    if (!calcTargetBtn || !targetResult || !targetGpaInput) return;
 
     calcTargetBtn.addEventListener('click', () => {
         const isScale4 = state.config.simMode === 'scale4';
@@ -638,47 +1007,98 @@ function initTargetCalculator() {
             return;
         }
 
-        const result = calculateInverseGPA(targetGpa);
-        if (result === null) {
+        const inverse = calculateInverseGPA(targetGpa);
+        if (inverse === null) {
             alert('Không tìm thấy môn học nào để dự phóng trong danh sách.');
             return;
         }
 
-        targetResultValue.textContent = result.value.toFixed(2);
+        if (isScale4) {
+            const balancedMinFloor = Math.max(TARGET_PLANNER_DEFAULT_MIN_SCALE4, targetGpa - 1.0);
+            let plan = buildScale4TargetPlan(targetGpa, { minScale4: balancedMinFloor });
+            let planMode = 'balanced';
+
+            if (!plan) {
+                plan = buildScale4TargetPlan(targetGpa, { minScale4: TARGET_PLANNER_DEFAULT_MIN_SCALE4 });
+                if (plan) planMode = 'safe-floor';
+            }
+
+            if (!plan) {
+                plan = buildScale4TargetPlan(targetGpa, { minScale4: 0 });
+                if (plan) planMode = 'unrestricted';
+            }
+
+            if (!plan) {
+                alert('Không thể tạo phương án phân bổ hệ 4 từ cấu hình hiện tại.');
+                return;
+            }
+
+            const delta = plan.achievedGpa - targetGpa;
+            const outsideRange = targetGpa < plan.minAchievable || targetGpa > plan.maxAchievable;
+            const deltaLabel = `${delta >= 0 ? '+' : ''}${delta.toFixed(2)}`;
+
+            targetResult.classList.remove('hidden');
+            targetResult.innerHTML = `
+                <div>Cần trung bình liên tục: <strong>${inverse.value.toFixed(2)}</strong> /môn dự phóng</div>
+                <div class="${outsideRange ? 'text-destructive' : ''}">
+                    GPA thực tế khả thi gần nhất: <strong>${plan.achievedGpa.toFixed(2)}</strong> (${deltaLabel} so với mục tiêu ${targetGpa.toFixed(2)})
+                </div>
+                <div>Phân bổ gợi ý: ${plan.mixSummary || 'Không có'}</div>
+                ${planMode === 'unrestricted'
+                    ? `<div class="impossible-warning"><i data-lucide="alert-octagon"></i> Không tìm thấy phương án cân bằng với ngưỡng an toàn. Đang dùng phân bổ không giới hạn.</div>`
+                    : `<div>Ngưỡng cân bằng đang áp dụng: <strong>${plan.minScale4.toFixed(1)}+</strong></div>`}
+                ${outsideRange ? `<div class="impossible-warning"><i data-lucide="alert-octagon"></i> Mục tiêu nằm ngoài miền khả thi (${plan.minAchievable.toFixed(2)} - ${plan.maxAchievable.toFixed(2)}).</div>` : ''}
+                <button class="btn-text" id="applyTargetPlanBtn">Áp dụng phân bổ</button>
+            `;
+
+            const applyPlanBtn = document.getElementById('applyTargetPlanBtn');
+            if (applyPlanBtn) {
+                applyPlanBtn.addEventListener('click', () => {
+                    applyScale4TargetPlan(plan);
+                    alert(`Đã áp dụng phân bổ. GPA thực tế dự kiến: ${plan.achievedGpa.toFixed(2)}.`);
+                });
+            }
+
+            lucide.createIcons();
+            targetResult.dataset.lastCalc = inverse.value;
+            targetResult.dataset.actualGpa = plan.achievedGpa;
+            return;
+        }
+
+        if (targetResultValue) {
+            targetResultValue.textContent = inverse.value.toFixed(2);
+        }
         targetResult.classList.remove('hidden');
-        
-        // Impossible goal warning
-        if (result.isImpossible) {
-            targetResultValue.classList.add('text-destructive');
+
+        if (inverse.isImpossible) {
             targetResult.innerHTML = `
                 <div class="impossible-warning">
-                    <i data-lucide="alert-octagon"></i> Mục tiêu vượt trần! (Cần ${result.value.toFixed(2)}/môn)
+                    <i data-lucide="alert-octagon"></i> Mục tiêu vượt trần! (Cần ${inverse.value.toFixed(2)}/môn)
                 </div>
-                <button class="btn-text" onclick="targetResult.classList.add('hidden')">Đóng</button>
+                <button class="btn-text" id="closeTargetWarning">Đóng</button>
             `;
+            const closeBtn = document.getElementById('closeTargetWarning');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    targetResult.classList.add('hidden');
+                });
+            }
             lucide.createIcons();
         } else {
-            targetResultValue.classList.remove('text-destructive');
             targetResult.innerHTML = `
-                Cần đạt: <strong id="targetResultValue">${result.value.toFixed(2)}</strong> /môn dự phóng
+                Cần đạt: <strong id="targetResultValue">${inverse.value.toFixed(2)}</strong> /môn dự phóng
                 <button class="btn-text" id="applyTargetBtn">Tự động áp dụng</button>
             `;
-            // Re-bind apply button since we replaced innerHTML
-            document.getElementById('applyTargetBtn').addEventListener('click', () => {
-                bulkSetGrades(result.value);
-                alert(`Đã áp dụng các môn dự phóng để hướng tới mục tiêu!`);
-            });
+            const applyBtn = document.getElementById('applyTargetBtn');
+            if (applyBtn) {
+                applyBtn.addEventListener('click', () => {
+                    bulkSetGrades(inverse.value);
+                    alert(`Đã áp dụng các môn dự phóng để hướng tới mục tiêu!`);
+                });
+            }
         }
-        
-        targetResult.dataset.lastCalc = result.value;
-    });
 
-    applyTargetBtn.addEventListener('click', () => {
-        const val = parseFloat(targetResult.dataset.lastCalc);
-        if (!isNaN(val)) {
-            bulkSetGrades(val);
-            alert(`Đã áp dụng các môn dự phóng để hướng tới mục tiêu!`);
-        }
+        targetResult.dataset.lastCalc = inverse.value;
     });
 }
 
@@ -696,7 +1116,9 @@ function calculateInverseGPA(targetGpa) {
         if (isPendingOrImproving) {
             pendingCredits += item.credits;
         } else {
-            const grade = isScale4 ? item.grade4 : item.originalGrade10;
+            const grade = isScale4
+                ? (!isNaN(item.grade4) ? item.grade4 : calculateGrade4(item.originalGrade10))
+                : item.originalGrade10;
             currentTotalWP += grade * item.credits;
             currentTotalCredits += item.credits;
         }
