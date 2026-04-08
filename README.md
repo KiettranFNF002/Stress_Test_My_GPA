@@ -6,7 +6,7 @@
 
 ---
 
-Bản điều khiển (Dashboard) phân tích điểm số đỉnh cao dành cho sinh viên, giúp bạn làm chủ lộ trình học tập, dự phóng tương lai và chinh phục mục tiêu GPA một cách thông minh nhất.
+Bản điều khiển (Dashboard) phân tích điểm số đỉnh cao dành cho sinh viên, giúp bạn làm chủ lộ trình học tập, dự phòng tương lai và chinh phục mục tiêu GPA một cách thông minh nhất.
 
 ![Dashboard Preview](screenshot.png)
 
@@ -30,38 +30,55 @@ Việc tính điểm tích lũy (GPA) và lên kế hoạch học tập thườn
 Chỉ với 1 click, bạn có ngay file ảnh PNG báo cáo GPA chuyên nghiệp để khoe bạn bè hoặc lưu lại làm mục tiêu phấn đấu.
 
 ### 🔮 Máy tính GPA Mục tiêu (Inverse Forecasting)
-Bạn nhập con số mong muốn (VD: 3.2), hệ thống sẽ "vắt óc" tính toán xem bạn cần đạt bao nhiêu điểm ở các môn còn lại để đạt được con số đó. Không còn phải đoán mò!
+Bạn nhập con số mong muốn (VD: 3.2), hệ thống sẽ **phân bổ rời rạc** mức điểm cần đạt cho từng môn dựa trên bảng Mapping (A, B, C...). 
+*Lưu ý: Do đặc thù các mức điểm quy đổi là cố định, kết quả GPA thực tế đạt được có thể lệch một sai số cực nhỏ so với mục tiêu lý tưởng.*
 
 ### 📊 Trải nghiệm Glassmorphism hiện đại
 Giao diện Dark-mode sang trọng, hiệu ứng kính mờ (Glassmorphism) tinh tế, mang lại cảm giác premium và alive trong từng cú click.
 
 ### 🎯 Đồng bộ hệ điểm 10 & 4
-Tự động quy đổi và đồng bộ toàn bộ Dashboard theo hệ điểm bạn ưu thích. Hỗ trợ đầy đủ logic mapping của các trường đại học (UEH, v.v.).
+Hệ thống sử dụng **Điểm hệ 10 làm nguồn dữ liệu gốc**. Điểm hệ 4 và Xếp loại được quy đổi động dựa trên cấu hình Mapping. Bạn có thể mô phỏng kịch bản ở cả hai hệ điểm một cách dễ dàng.
 
 ### 🛡️ Xử lý môn đặc biệt thông minh
-Tự động nhận diện và loại bỏ các môn Ngoại lệ, môn đạt (M/P) để đảm bảo số liệu GPA của bạn luôn chính xác tuyệt đối.
+Tự động nhận diện và loại bỏ các môn Ngoại lệ, môn đạt (M/P) để đảm bảo số liệu GPA của bạn luôn chính xác theo bộ quy tắc (rule) cấu hình hiện tại.
+
+---
+
+## 📥 Yêu cầu dữ liệu đầu vào
+
+Để Dashboard hoạt động chuẩn xác, tệp Excel của bạn cần có các cột sau:
+
+| Tên cột bắt buộc | Kiểu dữ liệu | Mô tả |
+| :--- | :--- | :--- |
+| **Mã học phần** | Văn bản/Số | Định danh duy nhất của môn học. |
+| **Tên học phần** | Văn bản | Tên môn (dùng để nhận diện môn ngoại lệ). |
+| **Số TC** | Số | Số tín chỉ của môn học. |
+| **Điểm** | Số (Hệ 10) | Điểm số hiện tại (Để trống cho môn dự kiến). |
+
+> [!TIP]
+> **Dành cho sinh viên UEH:** Bạn chỉ cần vào Portal -> Kết quả học tập -> Nhấn **Xuất Excel**. File tải về đã khớp hoàn toàn với yêu cầu của hệ thống!
+
+---
+
+## ⚠️ Lưu ý quan trọng
+
+- **Quyền riêng tư**: Mọi dữ liệu của bạn chỉ được lưu trữ tại thiết bị hiện tại (**localStorage**). Chúng tôi không lưu giữ bất kỳ thông tin nào của bạn trên server.
+- **Tính bền vững**: Nếu bạn đổi trình duyệt, dùng trình ẩn danh hoặc xóa cache, dữ liệu học tập sẽ biến mất. Hãy dùng nút Reset nếu muốn làm mới bảng điểm.
+- **Online vs Offline**: 
+    - **Dùng Online (Khuyên dùng)**: Luôn cập nhật tính năng mới nhất tại URL GitHub Pages.
+    - **Dùng Offline**: Tải mã nguồn về máy nếu bạn muốn tùy chỉnh sâu hoặc dùng khi không có mạng.
 
 ---
 
 ## 📝 Hướng dẫn sử dụng cho người mới (Non-tech)
 
-Nếu bạn không phải dân lập trình, đừng lo! Hãy làm theo 3 bước cực đơn giản này:
+### Cách 1: Sử dụng Offline
+1. Nhấn nút xanh **[<> Code]** phía trên -> Chọn **Download ZIP**.
+2. Giải nén tệp vừa tải về.
+3. Click đúp vào file `index.html` để mở trang web.
 
-### Bước 1: Tải công cụ về máy
-1. Nhìn lên phía trên trang này, tìm nút màu xanh có chữ **[<> Code]**.
-2. Click vào đó và chọn dòng cuối cùng: **Download ZIP**.
-3. Sau khi tải về, hãy **Giải nén** tệp tin đó ra một thư mục trên máy tính của bạn.
-
-### Bước 2: Chuẩn bị bảng điểm (Dành riêng cho sinh viên UEH)
-Mặc dù công cụ hỗ trợ nhiều trường, nhưng nó được **tối ưu hóa hoàn hảo cho UEHer**:
-1. Truy cập vào **Cổng thông tin sinh viên UEH** (student.ueh.edu.vn).
-2. Vào mục: **Tra cứu thông tin** -> **Kết quả học tập**.
-3. Chọn tất cả các năm học và nhấn nút **Xuất Excel**. Đây chính là file chúng ta cần!
-   * *Lưu ý: Các bạn trường khác chỉ cần chuẩn bị file Excel có cột 'Mã học phần', 'Tên học phần', 'Số TC', 'Điểm' là có thể dùng được.*
-
-### Bước 3: Khởi chạy
-1. Tìm file có tên là `index.html` trong thư mục bạn vừa giải nén.
-2. **Click đúp** để mở nó bằng trình duyệt (Chrome, Edge...) là bạn đã có ngay Dashboard để sử dụng!
+### Cách 2: Sử dụng trực tiếp Online
+Chỉ cần truy cập đường link: [https://kiettranfnf002.github.io/Stress_Test_My_GPA/](https://kiettranfnf002.github.io/Stress_Test_My_GPA/)
 
 ---
 
@@ -77,3 +94,4 @@ Dự án này được phát hành dưới [Giấy phép MIT](LICENSE).
 
 ---
 ⭐ **Nếu dự án này giúp bạn bớt Stress, hãy tặng mình 1 Star nhé!** ⭐
+
