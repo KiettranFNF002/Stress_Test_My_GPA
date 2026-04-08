@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stress Test My GPA</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts Optimized for Vietnamese -->
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <!-- SheetJS for Excel Parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Chart.js for Visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i data-lucide="layout-dashboard"></i>
+                <span>STRESS TEST<br>MY GPA</span>
+            </div>
+            <nav>
+                <div class="nav-item active">
+                    <i data-lucide="bar-chart-2"></i>
+                    <span>Tổng quan</span>
+                </div>
+                <div class="nav-item">
+                    <i data-lucide="file-text"></i>
+                    <span>Tất cả học phần</span>
+                </div>
+                <div class="nav-item">
+                    <i data-lucide="trending-up"></i>
+                    <span>Dự phóng</span>
+                </div>
+                <div class="nav-item">
+                    <i data-lucide="settings"></i>
+                    <span>Cấu hình</span>
+                </div>
+            </nav>
+            <div class="upload-section">
+                <div id="dropzone" class="dropzone">
+                    <i data-lucide="upload-cloud"></i>
+                    <p>Kéo thả file Excel<br><span>hoặc Click để chọn</span></p>
+                    <input type="file" id="fileInput" hidden accept=".xlsx, .xls">
+                </div>
+                <div id="fileInfo" class="file-info hidden">
+                    <i data-lucide="file-spreadsheet"></i>
+                    <span id="fileName">...</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="page-title">
+                    <div class="title-with-help">
+                        <h1>Dashboard Phân Tích Điểm Số</h1>
+                        <button class="btn-help" id="helpBtn" title="Hướng dẫn sử dụng">
+                            <i data-lucide="help-circle"></i>
+                        </button>
+                    </div>
+                    <p>Hệ thống hỗ trợ Stress Test và Mô phỏng GPA</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-primary" id="resetBtn">
+                        <i data-lucide="refresh-cw"></i> Reset Toàn bộ
+                    </button>
+                </div>
+            </header>
+
+            <!-- KPI Cards -->
+            <section class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-info">
+                        <span class="label">GPA Hiện Tại (Hệ 10)</span>
+                        <h2 id="gpa10">0.00</h2>
+                    </div>
+                    <div class="kpi-icon positive">
+                        <i data-lucide="award"></i>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-info">
+                        <span class="label">GPA Hiện Tại (Hệ 4)</span>
+                        <h2 id="gpa4">0.00</h2>
+                    </div>
+                    <div class="kpi-icon highlight">
+                        <i data-lucide="star"></i>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-info">
+                        <span class="label">Tổng Tín Chỉ Tích Lũy</span>
+                        <h2 id="totalCredits">0</h2>
+                    </div>
+                    <div class="kpi-icon">
+                        <i data-lucide="book-open"></i>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-info">
+                        <span class="label">Số Môn Cần Stress Test</span>
+                        <h2 id="pendingSubjects">0</h2>
+                    </div>
+                    <div class="kpi-icon warning">
+                        <i data-lucide="alert-triangle"></i>
+                    </div>
+                </div>
+                <div class="kpi-card highlight-border">
+                    <div class="kpi-info">
+                        <span class="label">Xếp Loại Học Lực</span>
+                        <h2 id="academicRank">--</h2>
+                    </div>
+                    <div class="kpi-icon positive">
+                        <i data-lucide="trending-up"></i>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Navigation Tabs Content -->
+            <div id="overview-tab" class="tab-content active">
+                <section class="viz-grid">
+                    <div class="viz-card table-container">
+                        <div class="card-header">
+                            <h3>Học phần vừa cập nhật</h3>
+                            <div class="filters">
+                                <span id="saveStatus" class="save-status">Dữ liệu đã lưu</span>
+                            </div>
+                        </div>
+                        <div class="table-wrapper">
+                            <table id="recentTable">
+                                <thead>
+                                    <tr>
+                                        <th>Mã HP</th>
+                                        <th>Tên Học Phần</th>
+                                        <th>Điểm (10)</th>
+                                        <th>Trạng thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td colspan="4" class="empty-state">Tải file để xem dữ liệu.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="viz-card chart-container">
+                        <div class="card-header">
+                            <h3>Xu hướng GPA Tích Lũy</h3>
+                        </div>
+                        <canvas id="gpaChart"></canvas>
+                    </div>
+                </section>
+            </div>
+
+            <div id="subjects-tab" class="tab-content">
+                <section class="viz-card full-width">
+                    <div class="card-header">
+                        <h3>Danh sách học phần đầy đủ</h3>
+                        <div class="filters">
+                            <input type="text" id="searchInput" placeholder="Tìm tên môn học...">
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table id="subjectTable">
+                            <thead>
+                                <tr>
+                                    <th>Mã HP</th>
+                                    <th>Tên Học Phần</th>
+                                    <th>Số TC</th>
+                                    <th>Điểm (10)</th>
+                                    <th>Điểm (4)</th>
+                                    <th>Điểm Chữ</th>
+                                    <th>Chọn cải thiện</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td colspan="7" class="empty-state">Vui lòng tải file Excel.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <div id="simulation-tab" class="tab-content">
+                <section class="viz-card full-width">
+                    <div class="card-header">
+                        <h3>Dự phóng & Stress Test Hàng Loạt</h3>
+                        <div class="bulk-actions">
+                            <span>Đặt điểm cho tất cả môn:</span>
+                            <div class="bulk-input-group">
+                                <input type="number" id="bulkGradeInput" min="0" max="10" step="0.5" value="8.0">
+                                <button class="btn btn-sm" id="applyBulkBtn">Áp dụng</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table id="simulationTable">
+                            <thead>
+                                    <tr>
+                                        <th>Mã HP</th>
+                                        <th>Tên Học Phần</th>
+                                        <th>Số TC</th>
+                                        <th>Phân loại</th>
+                                        <th>Điểm Kỳ vọng</th>
+                                        <th>Hành Động</th>
+                                    </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td colspan="6" class="empty-state">Không có môn học nào cần dự phóng.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <div id="settings-tab" class="tab-content">
+                <section class="viz-card full-width">
+                    <div class="card-header">
+                        <h3>Thiết lập Quy tắc GPA</h3>
+                        <button class="btn btn-sm btn-primary" id="addMappingBtn">+ Thêm mốc điểm</button>
+                    </div>
+                    <div class="settings-group">
+                        <label>Hệ điểm dự phóng chủ đạo:</label>
+                        <select id="simModeSelect" class="settings-select">
+                            <option value="scale10">Hệ 10 (0.0 - 10.0)</option>
+                            <option value="scale4">Hệ 4 (0.0 - 4.0)</option>
+                        </select>
+                    </div>
+                    <div class="table-wrapper">
+                        <table id="mappingTable" class="settings-table">
+                            <thead>
+                                <tr>
+                                    <th>Mốc điểm hệ 10</th>
+                                    <th>Quy đổi hệ 4</th>
+                                    <th>Điểm chữ</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mappingTableBody">
+                                <!-- Rules injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="settings-actions">
+                        <button class="btn btn-primary" id="saveConfigBtn">Lưu & Áp dụng</button>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="helpModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i data-lucide="info"></i> Hướng dẫn sử dụng</h2>
+                <button class="btn-close" id="closeHelpBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <section class="help-section">
+                    <h3>1. Hướng dẫn lấy dữ liệu (SV UEH)</h3>
+                    <p>Để có file Excel chuẩn nhất, bạn thực hiện các bước:</p>
+                    <ol>
+                        <li>Đăng nhập <strong>UEH Student</strong>.</li>
+                        <li>Vào mục <strong>Tra cứu thông tin</strong> &rarr; <strong>Kết quả học tập</strong>.</li>
+                        <li>Nhấn nút <strong>[Xuất excel]</strong> ở đầu trang.</li>
+                    </ol>
+                    <p><em>* Lưu ý: File này chỉ chứa các học phần bạn đã đăng ký trên hệ thống.</em></p>
+                </section>
+
+                <section class="help-section">
+                    <h3>2. Định dạng file yêu cầu</h3>
+                    <p>File Excel cần có các cột tiêu đề sau (đúng chính tả):</p>
+                    <ul>
+                        <li><strong>Mã học phần:</strong> Mã định danh môn.</li>
+                        <li><strong>Tên học phần:</strong> Tên môn học.</li>
+                        <li><strong>Số TC:</strong> Số tín chỉ (phải lớn hơn 0).</li>
+                        <li><strong>Điểm:</strong> Điểm hệ 10 (để trống nếu chưa học).</li>
+                    </ul>
+                </section>
+                
+                <section class="help-section">
+                    <h3>2. Cách Dự học môn mới</h3>
+                    <p>Để lập kế hoạch cho kỳ học sắp tới:</p>
+                    <ul>
+                        <li>Trong Excel, thêm hàng cho môn sắp học nhưng <strong>bỏ trống cột Điểm</strong>.</li>
+                        <li>Hệ thống gán nhãn <span class="badge-highlight">Dự học</span> và đưa vào tab <strong>Dự phóng</strong> để bạn nhập điểm kỳ vọng.</li>
+                    </ul>
+                </section>
+
+                <section class="help-section">
+                    <h3>3. Mô phỏng & Lập kịch bản điểm</h3>
+                    <p>Đây là linh hồn của bộ máy "Stress Test My GPA":</p>
+                    <ul>
+                        <li><strong>Kịch bản tích cực:</strong> Nhập điểm cao (9-10) để xem GPA có thể bứt phá đến mức nào.</li>
+                        <li><strong>Stress Test (Kịch bản tiêu cực):</strong> Nhập điểm thấp (4-5) để kiểm tra xem GPA của bạn "chịu đựng" được đến mức nào nếu kỳ tới gặp khó khăn.</li>
+                    </ul>
+                    <p><strong>Quy trình:</strong> Các môn <span class="badge-highlight">Dự học</span> (điểm trống trong Excel) sẽ tự động xuất hiện; các môn <span class="badge-accent">Cải thiện</span> cần được chọn tại tab <strong>Tất cả học phần</strong>. Sau đó, bạn chỉ cần thay đổi điểm số tại tab <strong>Dự phóng</strong>.</p>
+                </section>
+
+                <section class="help-section">
+                    <h3>4. Các môn ngoại lệ</h3>
+                    <p>Các môn sau <strong>không được tính vào GPA</strong>:</p>
+                    <ul>
+                        <li>Giáo dục thể chất (GDTC), Giáo dục quốc phòng (GDQP).</li>
+                        <li>Các học phần có dấu <code>(*)</code> trong tên.</li>
+                        <li>Các điểm chữ đặc biệt: M (Miễn), P (Đạt), I/X (Chưa hoàn thiện).</li>
+                    </ul>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

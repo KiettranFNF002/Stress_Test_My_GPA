@@ -1,0 +1,14 @@
+# Excel Data (IMPORTANT: Protect Personal Transcript)
+*.xlsx
+*.xls
+*.csv
+
+# AI & Editor Configs
+.gemini/
+.agent/
+.antigravity/
+.vscode/
+
+# System files
+.DS_Store
+Thumbs.db
