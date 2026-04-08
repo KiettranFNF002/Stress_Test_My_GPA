@@ -2,6 +2,10 @@
 
 > **Đừng để GPA làm bạn Stress, hãy Stress Test lại nó!**
 
+👉 **TRẢI NGHIỆM NGAY TẠI: [https://kiettranfnf002.github.io/Stress_Test_My_GPA/](https://kiettranfnf002.github.io/Stress_Test_My_GPA/)**
+
+---
+
 Bản điều khiển (Dashboard) phân tích điểm số đỉnh cao dành cho sinh viên, giúp bạn làm chủ lộ trình học tập, dự phóng tương lai và chinh phục mục tiêu GPA một cách thông minh nhất.
 
 ![Dashboard Preview](screenshot.png)
