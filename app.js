@@ -238,10 +238,15 @@ function updateDashboard() {
     pendingSubjectsEl.textContent = state.pendingCount;
     document.getElementById('academicRank').textContent = state.academicRank;
 
-    // Update dynamic labels
+    // Update dynamic labels and placeholders
     const isScale4 = state.config.simMode === 'scale4';
     document.getElementById('targetGpaLabel').textContent = `Máy tính GPA Mục tiêu (${isScale4 ? '4' : '10'})`;
     document.getElementById('recentGradeHeader').textContent = `Điểm (${isScale4 ? '4' : '10'})`;
+    
+    const targetGpaInput = document.getElementById('targetGpaInput');
+    if (targetGpaInput) {
+        targetGpaInput.placeholder = isScale4 ? "Ví dụ: 3.5" : "Ví dụ: 8.5";
+    }
 }
 
 function calculateStats() {
@@ -639,17 +644,33 @@ function initTargetCalculator() {
             return;
         }
 
-        targetResultValue.textContent = result.toFixed(2);
+        targetResultValue.textContent = result.value.toFixed(2);
         targetResult.classList.remove('hidden');
         
-        // Always store as grade 10 for apply function
-        if (isScale4) {
-             // If we calculated in scale 4, we need the grade 10 equivalent to apply
-             const found = [...state.config.mapping].sort((a,b) => b.val4 - a.val4).find(m => result >= m.val4);
-             targetResult.dataset.lastCalc = found ? found.min : (result * 2.5);
+        // Impossible goal warning
+        if (result.isImpossible) {
+            targetResultValue.classList.add('text-destructive');
+            targetResult.innerHTML = `
+                <div class="impossible-warning">
+                    <i data-lucide="alert-octagon"></i> Mục tiêu vượt trần! (Cần ${result.value.toFixed(2)}/môn)
+                </div>
+                <button class="btn-text" onclick="targetResult.classList.add('hidden')">Đóng</button>
+            `;
+            lucide.createIcons();
         } else {
-             targetResult.dataset.lastCalc = result;
+            targetResultValue.classList.remove('text-destructive');
+            targetResult.innerHTML = `
+                Cần đạt: <strong id="targetResultValue">${result.value.toFixed(2)}</strong> /môn dự phóng
+                <button class="btn-text" id="applyTargetBtn">Tự động áp dụng</button>
+            `;
+            // Re-bind apply button since we replaced innerHTML
+            document.getElementById('applyTargetBtn').addEventListener('click', () => {
+                bulkSetGrades(result.value);
+                alert(`Đã áp dụng các môn dự phóng để hướng tới mục tiêu!`);
+            });
         }
+        
+        targetResult.dataset.lastCalc = result.value;
     });
 
     applyTargetBtn.addEventListener('click', () => {
@@ -687,5 +708,8 @@ function calculateInverseGPA(targetGpa) {
     const avgRequired = requiredWP / pendingCredits;
 
     const maxVal = isScale4 ? 4 : 10;
-    return Math.max(0, Math.min(maxVal, avgRequired));
+    return {
+        value: avgRequired,
+        isImpossible: avgRequired > maxVal
+    };
 }

@@ -10,6 +10,7 @@
     --color-destructive: #EF4444;
     --color-warning: #F59E0B;
     --color-highlight: #3B82F6;
+    --color-on-destructive: #FFFFFF;
     
     --font-heading: 'Lexend', sans-serif;
     --font-body: 'Be Vietnam Pro', sans-serif;
@@ -717,6 +718,29 @@ tbody tr:hover {
 
 .btn-secondary:hover {
     background-color: var(--color-muted);
+}
+
+.text-destructive {
+    color: var(--color-destructive) !important;
+}
+
+.impossible-warning {
+    color: var(--color-destructive);
+    background: rgba(239, 68, 68, 0.1);
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 0.813rem;
+}
+
+.impossible-warning i {
+    width: 18px;
+    height: 18px;
 }
 
 /* Responsive */
