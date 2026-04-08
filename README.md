@@ -6,7 +6,7 @@
 ### 🚀 Giới thiệu
 **STRESS TEST MY GPA** là công cụ web tĩnh mạnh mẽ dành riêng cho sinh viên UEH (và các trường đại học khác thông qua hệ thống cấu hình mở). Thay vì chỉ tính điểm trung bình như các công cụ thông thường, dự án này tập trung vào triết lý **"Stress Test"** — giúp người dùng lập kịch bản cho những tình huống tệ nhất để biết được sức chịu đựng của GPA hiện tại.
 
-![Project Preview](https://via.placeholder.com/800x450.png?text=Stress+Test+My+GPA+Preview) *(Lưu ý: Bạn có thể thay thế bằng screenshot thực tế sau)*
+![Project Preview](screenshot.png)
 
 ---
 
