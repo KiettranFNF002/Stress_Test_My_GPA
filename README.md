@@ -10,6 +10,14 @@
 
 ---
 
+### 🚀 Hướng dẫn sử dụng nhanh (Dành cho mọi người)
+Bạn không cần biết lập trình hay cài đặt phức tạp, chỉ cần thực hiện 3 bước:
+1. Nhấn vào nút xanh **[Code ▾]** ở phía trên bên phải trang này.
+2. Chọn **Download ZIP** và giải nén file vừa tải về máy.
+3. Tìm và nhấn đúp vào file **`index.html`** để bắt đầu sử dụng ngay trên trình duyệt của bạn (Chrome, Edge,...).
+
+---
+
 ### ✨ Tính năng nổi bật
 - **⚡ Tự động hóa hoàn toàn**: Chỉ cần tải lên file Excel kết quả học tập từ UEH Student Portal, hệ thống sẽ tự động dọn dẹp dữ liệu (loại bỏ GDTC, GDQP, các môn ngoại lệ).
 - **🛡️ Stress Test Philosophy**: Lập kịch bản điểm số kỳ tới (từ xuất sắc đến tệ nhất) để đo lường độ bền của GPA.
