@@ -212,8 +212,77 @@ function handleFile(file) {
     reader.readAsArrayBuffer(file);
 }
 
+function normalizeCourseKey(value) {
+    if (value === null || value === undefined) return '';
+    return String(value)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/\s+/g, '')
+        .replace(/[^a-z0-9]/g, '');
+}
+
+function getCourseGroupKey(item, fallbackIndex) {
+    const idKey = normalizeCourseKey(item.id);
+    if (idKey) return `id:${idKey}`;
+
+    const nameKey = normalizeCourseKey(item.name);
+    if (nameKey) return `name:${nameKey}`;
+
+    return `row:${fallbackIndex}`;
+}
+
+function isBetterCourseAttempt(candidate, current) {
+    const candidateHasNumericGrade = !isNaN(candidate.originalGrade10);
+    const currentHasNumericGrade = !isNaN(current.originalGrade10);
+
+    if (candidateHasNumericGrade !== currentHasNumericGrade) {
+        return candidateHasNumericGrade;
+    }
+
+    if (candidateHasNumericGrade && candidate.originalGrade10 !== current.originalGrade10) {
+        return candidate.originalGrade10 > current.originalGrade10;
+    }
+
+    const candidateGrade4 = !isNaN(candidate.grade4)
+        ? candidate.grade4
+        : calculateGrade4(candidate.originalGrade10);
+    const currentGrade4 = !isNaN(current.grade4)
+        ? current.grade4
+        : calculateGrade4(current.originalGrade10);
+
+    if (!isNaN(candidateGrade4) && !isNaN(currentGrade4) && candidateGrade4 !== currentGrade4) {
+        return candidateGrade4 > currentGrade4;
+    }
+
+    if (candidate.isSpecialMorP !== current.isSpecialMorP) {
+        return !candidate.isSpecialMorP;
+    }
+
+    return (candidate._sourceIndex || 0) > (current._sourceIndex || 0);
+}
+
+function deduplicateRetakenCourses(items) {
+    const grouped = new Map();
+
+    items.forEach((item, index) => {
+        const key = getCourseGroupKey(item, item._sourceIndex ?? index);
+        const existing = grouped.get(key);
+        if (!existing || isBetterCourseAttempt(item, existing)) {
+            grouped.set(key, item);
+        }
+    });
+
+    return [...grouped.values()]
+        .sort((a, b) => (a._sourceIndex || 0) - (b._sourceIndex || 0))
+        .map(item => {
+            const { _sourceIndex, ...cleaned } = item;
+            return cleaned;
+        });
+}
+
 function processExcelData(data) {
-    originalData = data.map(row => {
+    const parsedData = data.map((row, index) => {
         const name = row['Tên học phần'] || 'Không rõ';
         const gradeLetter = (row['Điểm chữ'] || '').toString().trim().toUpperCase();
         
@@ -242,9 +311,16 @@ function processExcelData(data) {
             originalGrade10: parseFloat(row['Điểm']),
             isException: isException,
             isSpecialIorX: isSpecialIorX,
-            isSpecialMorP: isSpecialMorP
+            isSpecialMorP: isSpecialMorP,
+            _sourceIndex: index
         };
     }).filter(item => item.credits > 0 && !item.isSpecialIorX); // Filter out incomplete data (I, X)
+
+    originalData = deduplicateRetakenCourses(parsedData);
+    if (parsedData.length !== originalData.length) {
+        console.info(`[GPA] Đã gộp ${parsedData.length - originalData.length} học phần trùng (học lại/học cải thiện), ưu tiên lần có kết quả tốt hơn.`);
+    }
+
     displayData = [...originalData];
     updateDashboard();
 }
