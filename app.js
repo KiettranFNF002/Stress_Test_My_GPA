@@ -1124,7 +1124,7 @@ function initTargetCalculator() {
 
             targetResult.classList.remove('hidden');
             targetResult.innerHTML = `
-                <div>Cần trung bình liên tục: <strong>${inverse.value.toFixed(2)}</strong> /môn dự phóng</div>
+                <div>Cần trung bình liên tục: <strong>${inverse.value.toFixed(2)}</strong> /tín chỉ dự phóng</div>
                 <div class="${outsideRange ? 'text-destructive' : ''}">
                     GPA thực tế khả thi gần nhất: <strong>${plan.achievedGpa.toFixed(2)}</strong> (${deltaLabel} so với mục tiêu ${targetGpa.toFixed(2)})
                 </div>
@@ -1158,7 +1158,7 @@ function initTargetCalculator() {
         if (inverse.isImpossible) {
             targetResult.innerHTML = `
                 <div class="impossible-warning">
-                    <i data-lucide="alert-octagon"></i> Mục tiêu vượt trần! (Cần ${inverse.value.toFixed(2)}/môn)
+                    <i data-lucide="alert-octagon"></i> Mục tiêu vượt trần! (Cần ${inverse.value.toFixed(2)}/tín chỉ)
                 </div>
                 <button class="btn-text" id="closeTargetWarning">Đóng</button>
             `;
@@ -1171,7 +1171,7 @@ function initTargetCalculator() {
             lucide.createIcons();
         } else {
             targetResult.innerHTML = `
-                Cần đạt: <strong id="targetResultValue">${inverse.value.toFixed(2)}</strong> /môn dự phóng
+                Cần đạt: <strong id="targetResultValue">${inverse.value.toFixed(2)}</strong> /tín chỉ dự phóng
                 <button class="btn-text" id="applyTargetBtn">Tự động áp dụng</button>
             `;
             const applyBtn = document.getElementById('applyTargetBtn');
