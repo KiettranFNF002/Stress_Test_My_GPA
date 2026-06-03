@@ -26,12 +26,10 @@ Việc tính điểm tích lũy (GPA) và lên kế hoạch học tập thườn
 
 ## 🚀 Tính năng nổi bật
 
-### 📱 Tối ưu hóa giao diện di động (Responsive Web Design)
-Giao diện được tinh chỉnh thông minh cho trải nghiệm trên điện thoại:
-- **Bottom Navigation Bar:** Chuyển đổi thanh sidebar trên máy tính thành thanh điều hướng tiện lợi ở đáy màn hình điện thoại, giúp thao tác bằng một tay dễ dàng.
-- **Tự động ẩn thành phần tĩnh:** Tự động ẩn các khối KPI lớn, hộp upload và mô tả trên các tab phụ (*Tất cả học phần*, *Dự phóng*, *Cấu hình*) để nhường chỗ hoàn toàn cho bảng nội dung.
-- **Lưới KPI 2 cột siêu gọn:** Bố trí thông minh các chỉ số chính tại tab Tổng quan để tiết kiệm diện tích màn hình dọc.
-- **Tóm tắt GPA thời gian thực:** Hiển thị điểm số thu nhỏ trên tab Dự phóng giúp theo dõi kết quả giả lập trực quan.
+### 💻📱 Hỗ trợ đa thiết bị (Responsive Design)
+Giao diện tự động co giãn và tối ưu hóa trải nghiệm trên mọi kích thước màn hình:
+- **Trên Máy tính/Laptop:** Hiển thị bố cục Dashboard chuyên nghiệp với thanh Sidebar bên trái và không gian hiển thị rộng rãi, lý tưởng cho việc nhập liệu và quản lý tệp tin.
+- **Trên Điện thoại di động:** Tự động tinh chỉnh thông minh để tiết kiệm diện tích: chuyển Sidebar thành thanh Bottom Navigation tiện lợi ở đáy, thu gọn lưới KPI thành 2 cột, và ẩn bớt các phần tử tĩnh ở các tab phụ để nhường chỗ hoàn toàn cho nội dung chính.
 
 ### 📸 Xuất báo cáo cực nét
 Chỉ với 1 click, bạn có ngay file ảnh PNG báo cáo GPA chuyên nghiệp để khoe bạn bè hoặc lưu lại làm mục tiêu phấn đấu.
