@@ -68,7 +68,7 @@ Tự động nhận diện và loại bỏ các môn Ngoại lệ, môn đạt (
 - **Quyền riêng tư**: Mọi dữ liệu của bạn chỉ được lưu trữ tại thiết bị hiện tại (**localStorage**). Chúng tôi không lưu giữ bất kỳ thông tin nào của bạn trên server.
 - **Tính bền vững**: Nếu bạn đổi trình duyệt, dùng trình ẩn danh hoặc xóa cache, dữ liệu học tập sẽ biến mất. Hãy dùng nút Reset nếu muốn làm mới bảng điểm.
 - **Học lại / Học cải thiện**: Nếu một học phần xuất hiện nhiều lần trong file (kể cả trường hợp rớt nhiều lần), hệ thống sẽ tự gộp bản ghi trùng và ưu tiên lần có điểm tốt hơn để tránh nhân đôi tín chỉ/GPA.
-- **Đổi tên học phần hoặc mã học phần**: Nếu trường đổi mã hoặc đổi tên môn qua từng khóa/kỳ, thuật toán hiện tại không thể tự suy luận 100% là cùng một môn. Bạn nên rà lại file Excel trước khi nạp để tránh sai lệch.
+- **Học phần tương đương**: Một số cặp học phần tương đương phổ biến từ bảng UEH sẽ được gộp như cùng một môn, kể cả khi bảng tương đương hiển thị hai chiều. Với các cặp mới ngoài danh sách, bạn vẫn nên rà lại file Excel hoặc bổ sung mapping tương đương để tránh sai lệch.
 - **Online vs Offline**: 
     - **Dùng Online (Khuyên dùng)**: Luôn cập nhật tính năng mới nhất tại URL GitHub Pages.
     - **Dùng Offline**: Tải mã nguồn về máy nếu bạn muốn tùy chỉnh sâu hoặc dùng khi không có mạng.

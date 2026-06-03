@@ -233,9 +233,69 @@ function normalizeCourseKey(value) {
         .replace(/[^a-z0-9]/g, '');
 }
 
+const COURSE_EQUIVALENCE_PAIRS = [
+    ['ACC507071', 'ACC507204'],
+    ['FIN505045', 'FIN505124'],
+    ['MAT508135', 'STA508029'],
+    ['STA508029', 'MAT508135'],
+    ['ENG513159', 'ENG513197'],
+    ['ENG513197', 'ENG513159'],
+    ['MAT508028', 'MAT508133'],
+    ['MAT508133', 'MAT508028']
+];
+
+function buildCourseEquivalenceMap(pairs) {
+    const parent = new Map();
+
+    function ensure(key) {
+        if (key && !parent.has(key)) parent.set(key, key);
+    }
+
+    function find(key) {
+        ensure(key);
+        const root = parent.get(key);
+        if (root === key) return key;
+        const resolved = find(root);
+        parent.set(key, resolved);
+        return resolved;
+    }
+
+    function union(left, right) {
+        const leftRoot = find(left);
+        const rightRoot = find(right);
+        if (leftRoot !== rightRoot) parent.set(rightRoot, leftRoot);
+    }
+
+    pairs.forEach(([left, right]) => {
+        const leftKey = normalizeCourseKey(left);
+        const rightKey = normalizeCourseKey(right);
+        if (leftKey && rightKey) union(leftKey, rightKey);
+    });
+
+    const components = new Map();
+    parent.forEach((_, key) => {
+        const root = find(key);
+        if (!components.has(root)) components.set(root, []);
+        components.get(root).push(key);
+    });
+
+    const equivalenceMap = new Map();
+    components.forEach(keys => {
+        const canonical = [...keys].sort()[0];
+        keys.forEach(key => equivalenceMap.set(key, canonical));
+    });
+
+    return equivalenceMap;
+}
+
+const COURSE_EQUIVALENCE_MAP = buildCourseEquivalenceMap(COURSE_EQUIVALENCE_PAIRS);
+
 function getCourseGroupKey(item, fallbackIndex) {
     const idKey = normalizeCourseKey(item.id);
-    if (idKey) return `id:${idKey}`;
+    if (idKey) {
+        const equivalentKey = COURSE_EQUIVALENCE_MAP.get(idKey);
+        return equivalentKey ? `equiv:${equivalentKey}` : `id:${idKey}`;
+    }
 
     const nameKey = normalizeCourseKey(item.name);
     if (nameKey) return `name:${nameKey}`;
