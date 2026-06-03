@@ -743,6 +743,11 @@ tbody tr:hover {
     height: 18px;
 }
 
+/* Mobile upload card (hidden by default on desktop) */
+.mobile-upload-card {
+    display: none;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
     .viz-grid {
@@ -751,17 +756,207 @@ tbody tr:hover {
 }
 
 @media (max-width: 768px) {
+    /* Sidebar turns into Bottom Nav */
     .sidebar {
-        width: 80px;
-        padding: 1rem;
+        width: 100%;
+        height: 65px;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        top: auto;
+        border-right: none;
+        border-top: 1px solid var(--color-border);
+        flex-direction: row;
+        padding: 0;
+        z-index: 100;
+        background: var(--color-primary);
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
     }
-    .sidebar .logo span, .sidebar nav span, .sidebar .dropzone p, .sidebar .dropzone span {
-        display: none;
+    
+    .sidebar .logo, 
+    .sidebar .upload-section {
+        display: none !important;
     }
+    
+    .sidebar nav {
+        display: flex;
+        flex-direction: row;
+        width: 100%;
+        height: 100%;
+        justify-content: space-around;
+        align-items: center;
+        margin-bottom: 0;
+    }
+    
+    .sidebar .nav-item {
+        margin-bottom: 0;
+        padding: 8px 0;
+        border-radius: 0;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        font-size: 0.65rem;
+        flex: 1;
+        height: 100%;
+        border-left: none;
+        transition: all 0.2s;
+    }
+    
+    .sidebar .nav-item:hover, 
+    .sidebar .nav-item.active {
+        background-color: rgba(255, 255, 255, 0.02);
+    }
+    
+    .sidebar .nav-item.active {
+        border-left: none;
+        border-bottom: 3px solid var(--color-accent);
+        color: var(--color-accent);
+    }
+    
+    .sidebar .nav-item span {
+        display: block !important;
+        font-size: 0.65rem;
+        font-weight: 500;
+    }
+
+    .sidebar .nav-item i {
+        width: 20px;
+        height: 20px;
+    }
+    
+    /* Main Content Shift */
     .main-content {
-        margin-left: 80px;
+        margin-left: 0;
+        padding: 1.5rem 1rem 80px 1rem;
     }
+    
+    /* Header layout */
+    .top-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .header-actions {
+        width: 100%;
+        gap: 10px;
+    }
+    
+    .header-actions .btn {
+        flex: 1;
+        justify-content: center;
+        padding: 8px 12px;
+        font-size: 0.813rem;
+    }
+    
+    /* Show mobile upload card */
+    .mobile-upload-card {
+        display: block;
+        background: var(--color-secondary);
+        border: 1.5px dashed var(--color-border);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        transition: border-color 0.2s;
+    }
+    
+    .mobile-upload-card:active {
+        border-color: var(--color-accent);
+    }
+    
+    .mobile-upload-dropzone {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        cursor: pointer;
+    }
+    
+    .mobile-upload-dropzone i {
+        width: 28px;
+        height: 28px;
+        color: var(--color-accent);
+    }
+    
+    .mobile-upload-dropzone p {
+        font-size: 0.813rem;
+        font-weight: 500;
+        color: #94A3B8;
+    }
+    
+    /* KPI grids */
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .kpi-card {
+        padding: 1rem;
+        border-radius: 12px;
+    }
+    
+    .kpi-info h2 {
+        font-size: 1.5rem;
+    }
+    
+    .kpi-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+    }
+    
+    .kpi-card.target-calculator {
+        grid-column: span 2;
+    }
+    
+    /* Tables sizing */
+    #subjectTable {
+        min-width: 650px;
+    }
+    
+    #recentTable {
+        min-width: 400px;
+    }
+    
+    #simulationTable {
+        min-width: 550px;
+    }
+    
+    #mappingTable {
+        min-width: 450px;
+    }
+    
+    /* Modals adjustment */
+    .modal-content {
+        width: 92%;
+        padding: 20px;
+        max-height: 80vh;
+        border-radius: 16px;
+    }
+}
+
+@media (max-width: 480px) {
     .kpi-grid {
         grid-template-columns: 1fr;
+    }
+    
+    .kpi-card.target-calculator {
+        grid-column: span 1;
+    }
+    
+    .header-actions {
+        flex-direction: column;
+    }
+    
+    .header-actions .btn {
+        width: 100%;
+    }
+    
+    .sidebar .nav-item span {
+        font-size: 0.6rem;
     }
 }

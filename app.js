@@ -43,6 +43,9 @@ const dropzone = document.getElementById('dropzone');
 const fileInput = document.getElementById('fileInput');
 const fileInfo = document.getElementById('fileInfo');
 const fileNameSpan = document.getElementById('fileName');
+const mobileUploadBtn = document.getElementById('mobileUploadBtn');
+const mobileFileInfo = document.getElementById('mobileFileInfo');
+const mobileFileNameSpan = document.getElementById('mobileFileName');
 const subjectTableBody = document.querySelector('#subjectTable tbody');
 const recentTableBody = document.querySelector('#recentTable tbody');
 const simulationTableBody = document.querySelector('#simulationTable tbody');
@@ -165,6 +168,8 @@ function initPersistence() {
             updateDashboard();
             fileInfo.classList.remove('hidden');
             fileNameSpan.textContent = "Dữ liệu đã lưu";
+            if (mobileFileInfo) mobileFileInfo.classList.remove('hidden');
+            if (mobileFileNameSpan) mobileFileNameSpan.textContent = "Dữ liệu đã lưu";
         } catch (e) {
             console.error("Lỗi khi load dữ liệu cũ", e);
         }
@@ -184,6 +189,9 @@ function saveToStorage() {
 
 function initDropzone() {
     dropzone.addEventListener('click', () => fileInput.click());
+    if (mobileUploadBtn) {
+        mobileUploadBtn.addEventListener('click', () => fileInput.click());
+    }
     dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('active'); });
     dropzone.addEventListener('dragleave', () => dropzone.classList.remove('active'));
     dropzone.addEventListener('drop', (e) => {
@@ -201,6 +209,8 @@ function initDropzone() {
 function handleFile(file) {
     fileNameSpan.textContent = file.name;
     fileInfo.classList.remove('hidden');
+    if (mobileFileNameSpan) mobileFileNameSpan.textContent = file.name;
+    if (mobileFileInfo) mobileFileInfo.classList.remove('hidden');
     const reader = new FileReader();
     reader.onload = (e) => {
         const data = new Uint8Array(e.target.result);
