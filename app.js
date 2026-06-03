@@ -113,6 +113,7 @@ function initNavigation() {
 
 function switchTab(tabName) {
     state.activeTab = tabName;
+    document.body.setAttribute('data-active-tab', tabName);
     
     // Update Sidebar UI
     navItems.forEach(item => {
@@ -378,6 +379,12 @@ function updateDashboard() {
             bulkGradeInput.value = "";
         }
     }
+    
+    // Sync simulated GPA to mobile compact indicators
+    const simGpa10El = document.querySelector('.sim-gpa-10');
+    const simGpa4El = document.querySelector('.sim-gpa-4');
+    if (simGpa10El) simGpa10El.textContent = gpa10El.textContent;
+    if (simGpa4El) simGpa4El.textContent = gpa4El.textContent;
 }
 
 function calculateStats() {

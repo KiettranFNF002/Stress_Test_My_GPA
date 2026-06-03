@@ -748,6 +748,11 @@ tbody tr:hover {
     display: none;
 }
 
+/* Mobile GPA summary (hidden by default on desktop) */
+.mobile-gpa-summary {
+    display: none;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
     .viz-grid {
@@ -756,6 +761,18 @@ tbody tr:hover {
 }
 
 @media (max-width: 768px) {
+    /* Hide top elements on non-overview tabs on mobile */
+    body:not([data-active-tab="overview"]) .mobile-upload-card,
+    body:not([data-active-tab="overview"]) .kpi-grid,
+    body:not([data-active-tab="overview"]) .header-actions,
+    body:not([data-active-tab="overview"]) .top-bar .page-title p {
+        display: none !important;
+    }
+    
+    body:not([data-active-tab="overview"]) .top-bar {
+        margin-bottom: 1rem !important;
+    }
+
     /* Sidebar turns into Bottom Nav */
     .sidebar {
         width: 100%;
@@ -887,30 +904,50 @@ tbody tr:hover {
         color: #94A3B8;
     }
     
-    /* KPI grids */
+    /* Compact KPI grids in 2 columns */
     .kpi-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.75rem;
         margin-bottom: 1.5rem;
     }
     
     .kpi-card {
-        padding: 1rem;
+        padding: 0.75rem;
         border-radius: 12px;
     }
     
     .kpi-info h2 {
-        font-size: 1.5rem;
+        font-size: 1.35rem;
     }
     
     .kpi-icon {
-        width: 36px;
-        height: 36px;
-        border-radius: 8px;
+        display: none !important; /* Hide icons to save horizontal space */
     }
     
+    .kpi-card:nth-child(5),
     .kpi-card.target-calculator {
         grid-column: span 2;
+    }
+    
+    /* Compact GPA Summary inside Simulation tab */
+    .mobile-gpa-summary {
+        display: flex;
+        gap: 15px;
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        padding: 6px 12px;
+        border-radius: 12px;
+        font-size: 0.813rem;
+        margin-bottom: 10px;
+    }
+    
+    .mobile-gpa-summary span {
+        color: #94A3B8;
+        font-weight: 500;
+    }
+    
+    .mobile-gpa-summary strong {
+        color: var(--color-accent);
     }
     
     /* Tables sizing */
@@ -940,14 +977,6 @@ tbody tr:hover {
 }
 
 @media (max-width: 480px) {
-    .kpi-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .kpi-card.target-calculator {
-        grid-column: span 1;
-    }
-    
     .header-actions {
         flex-direction: column;
     }
