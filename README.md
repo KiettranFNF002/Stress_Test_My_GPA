@@ -1,4 +1,4 @@
-# 📊 STRESS TEST MY GPA 🚀
+# 📊 Stress Test My GPA – Tính GPA UEH và mô phỏng điểm
 
 > **Đừng để GPA làm bạn Stress, hãy Stress Test lại nó!**
 
@@ -6,7 +6,7 @@
 
 ---
 
-Bản điều khiển (Dashboard) phân tích điểm số đỉnh cao dành cho sinh viên, giúp bạn làm chủ lộ trình học tập, dự phòng tương lai và chinh phục mục tiêu GPA một cách thông minh nhất.
+**Stress Test My GPA** là công cụ tính GPA UEH từ file Excel kết quả học tập. Ứng dụng theo dõi GPA hệ 10 và hệ 4, mô phỏng điểm cần đạt cho các học phần sắp tới, và giúp sinh viên lập kế hoạch học tập.
 
 ![Dashboard Preview](screenshot.png)
 
